@@ -72,10 +72,12 @@ namespace boost { namespace program_options {
             if (approx)
             {
                 if (m_long_name.find(option) == 0)
+                {
                     if (m_long_name == option)
                         result = full_match;
                     else
                         result = approximate_match;
+                }
             }
             else
             {
@@ -203,15 +205,26 @@ namespace boost { namespace program_options {
 
     const unsigned options_description::m_default_line_length = 80;
 
-    options_description::options_description(unsigned line_length)
+    options_description::options_description(unsigned line_length,
+                                             unsigned description_length)
     : m_line_length(line_length)
-    {}
+    , m_description_length(description_length)
+    {
+        // we require a space between the option and description parts, so add 1.
+        assert(m_description_length < m_line_length - 1);    
+    }
 
-    options_description::options_description(const string& caption,
-                                             unsigned line_length)
-    : m_caption(caption), m_line_length(line_length)
-    {}
-
+    options_description::options_description(const std::string& caption,
+                                             unsigned line_length,
+                                             unsigned description_length)
+    : m_caption(caption)
+    , m_line_length(line_length)
+    , m_description_length(description_length)
+    {
+        // we require a space between the option and description parts, so add 1.
+        assert(m_description_length < m_line_length - 1);
+    }
+    
     void
     options_description::add(shared_ptr<option_description> desc)
     {
@@ -408,8 +421,8 @@ namespace boost { namespace program_options {
                         {                 
                             // is last_space within the second half ot the 
                             // current line
-                            if ((unsigned)distance(last_space, line_end) < 
-                                (line_length - indent) / 2)
+                            if (static_cast<unsigned>(distance(last_space, line_end)) < 
+                                (line_length / 2))
                             {
                                 line_end = last_space;
                             }
@@ -503,11 +516,18 @@ namespace boost { namespace program_options {
 
             if (!opt.description().empty())
             {
-                for(unsigned pad = first_column_width - ss.str().size(); 
-                    pad > 0; 
-                    --pad)
+                if (ss.str().size() >= first_column_width)
                 {
-                    os.put(' ');
+                   os.put('\n'); // first column is too long, lets put description in new line
+                   for (unsigned pad = first_column_width; pad > 0; --pad)
+                   {
+                      os.put(' ');
+                   }
+                } else {
+                   for(unsigned pad = first_column_width - ss.str().size(); pad > 0; --pad)
+                   {
+                      os.put(' ');
+                   }
                 }
             
                 format_description(os, opt.description(),
@@ -532,6 +552,11 @@ namespace boost { namespace program_options {
             ss << "  " << opt.format_name() << ' ' << opt.format_parameter();
             width = (max)(width, static_cast<unsigned>(ss.str().size()));            
         }
+        /* this is the column were description should start, if first
+           column is longer, we go to a new line */
+        const unsigned start_of_description_column = m_line_length - m_description_length;
+
+        width = (min)(width, start_of_description_column-1);
         
         /* add an additional space to improve readability */
         ++width;
