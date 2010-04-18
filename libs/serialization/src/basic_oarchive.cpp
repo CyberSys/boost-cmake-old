@@ -179,9 +179,9 @@ basic_oarchive_impl::find(const serialization::extended_type_info & ti) const {
             return false;
         }
         // returns class version
-        unsigned int version() const {
+        version_type version() const {
             assert(false);
-            return 0;
+            return version_type(0);
         }
         // returns true if this class is polymorphic
         bool is_polymorphic() const{

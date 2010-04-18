@@ -509,7 +509,7 @@ basic_iarchive::~basic_iarchive()
 }
 
 BOOST_ARCHIVE_DECL(void)
-basic_iarchive::set_library_version(unsigned int archive_library_version){
+basic_iarchive::set_library_version(version_type archive_library_version){
     pimpl->set_library_version(archive_library_version);
 }
 
