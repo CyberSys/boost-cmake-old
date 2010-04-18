@@ -8,7 +8,6 @@
 # This file was automatically generated from the original CMakeLists.txt file
 # Add a variable to hold the headers for the library
 set (lib_headers
-    property_map.hpp
     
 )
 
