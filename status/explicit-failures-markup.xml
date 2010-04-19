@@ -1814,31 +1814,23 @@
         <mark-unusable>
             <toolset name="borland-5.*"/>
             <toolset name="borland-6.*"/>
+            <toolset name="borland-cb2009"/>
+            <toolset name="borland-cb2010"/>
             <!-- Open64 and Pathscale ICE on almost all test cases, often
             because of http://gcc.gnu.org/bugzilla/show_bug.cgi?id=17327;
             property type detection fails because it uses enum types as tags.
             -->
             <toolset name="gcc-open64"/>
             <toolset name="pathscale-3.1"/>
+            <toolset name="pathscale-3.2"/>
             <!-- vacpp ICEs on many of the tests -->
             <toolset name="vacpp"/>
         </mark-unusable>
         <mark-expected-failures>
-          <test name="graphviz_test"/>
-          <toolset name="vc-8_0"/>
-          <toolset name="msvc-8_0"/>
-          <toolset name="intel-vc71-win-9.1"/>
-          <note refid="1" author="Doug Gregor"/>
-        </mark-expected-failures>
-        <mark-expected-failures>
-          <test name="graphviz_test"/>
-          <toolset name="como-4_3_3-vc7_1"/>
-          <note refid="3" author="Doug Gregor"/>
-        </mark-expected-failures>
-        <mark-expected-failures>
-            <test name="bundled_properties"/>
-            <toolset name="qcc-3.3*"/>
-            <note author="Jim Douglas" date="18 Feb 06" refid="27"/>
+          <test name="grid_graph_cc"/>
+          <test name="grid_graph_test"/>
+          <toolset name="msvc-7.1"/>
+          <note author="Jeremiah Willcock" refid="2"/>
         </mark-expected-failures>
         <mark-expected-failures>
           <test name="kolmogorov_max_flow_test"/>
@@ -1879,7 +1871,6 @@
             <toolset name="mipspro"/>
             <toolset name="acc*"/>
             <toolset name="msvc-8.0~wm5*"/>
-            <toolset name="vacpp*"/>
             <toolset name="pathscale*"/>
             <toolset name="intel-linux-8.*"/>
             <toolset name="gcc-3.4.6_linux_ia64"/>
@@ -1901,7 +1892,6 @@
             <toolset name="gcc-3.2*"/>
             <toolset name="gcc-3.3*"/>
             <toolset name="mipspro"/>
-            <toolset name="vacpp*"/>
             <toolset name="pathscale*"/>
             <toolset name="intel-linux-8.*"/>
             <note author="Ion Gazta&#241;aga">
@@ -2818,6 +2808,13 @@ for more information.
             <test name="shared_ptr_move_test"/>
             <toolset name="*"/>
             <note refid="40" author="Boris Gubenko"/>
+        </mark-expected-failures>
+        <mark-expected-failures>
+            <test name="sp_convertible_test"/>
+            <test name="wp_convertible_test"/>
+            <test name="ip_convertible_test"/>
+            <toolset name="borland-*"/>
+            <note refid="31" author="Peter Dimov"/>
         </mark-expected-failures>
    </library>
 
@@ -4602,113 +4599,40 @@ for more information.
     <!-- statechart -->
     <library name="statechart">
         <mark-unusable>
-            <toolset name="borland-5*"/>
-            <toolset name="cw-8*"/>
-            <toolset name="dmc-8*"/>
-            <toolset name="gcc-2*"/>
-            <toolset name="hp_cxx-65*"/>
-            <toolset name="msvc-6.5*"/>
-            <toolset name="msvc-7.0*"/>
-            <toolset name="pgi-7*"/>
+            <toolset name="borland*"/>
             <toolset name="sun-5*"/>
             <note author="Andreas Huber" refid="17"/>
         </mark-unusable>
-        <mark-unusable>
-            <toolset name="acc-pa_risc"/>
-            <note author="Andreas Huber">
-                Marked unusable because TransitionTest.cpp compiled but did
-                the wrong thing at runtime!
-            </note>
-        </mark-unusable>
-        <mark-expected-failures>
-            <test name="DllTestNative"/>
-            <toolset name="gcc-mingw-4.2*"/>
-            <note author="Andreas Huber">
-                A runtime failure of this test indicates that the RTTI
-                implementation of this platform is broken in conjunction
-                with dynamic linking.
-            </note>
-        </mark-expected-failures>
         <mark-expected-failures>
             <test name="DllTestNormal"/>
-            <toolset name="*cygwin*"/>
             <toolset name="*mingw*"/>
-            <toolset name="hp_cxx-71*"/>
-            <toolset name="cw-9*"/>
+            <toolset name="intel-darwin-10*"/>
+            <toolset name="intel-darwin-11*"/>
             <note author="Andreas Huber">
                 A runtime failure of this test indicates that this platform
                 <b>dynamically</b> links code in a manner such that under
                 certain circumstances more than one instance of a
                 header-defined static class member can exist at runtime. See
-                <a href="http://www.boost.org/libs/statechart/doc/faq.html#Dll">here</a>
+                <a href="http://www.boost.org/libs/statechart/doc/faq.html#Dll">FAQ</a>
                 for more information.
             </note>
         </mark-expected-failures>
         <mark-expected-failures>
-            <test name="LibTestNormal"/>
-            <toolset name="hp_cxx-71*"/>
+            <test name="DllTest*"/>
+            <test name="StateCastTest*"/>
+            <toolset name="intel-vc9-win-11*"/>
             <note author="Andreas Huber">
-                A runtime failure of this test indicates that this platform
-                <b>statically</b> links code in a manner such that under
-                certain circumstances more than one instance of a
-                header-defined static class member can exist at runtime. See
-                <a href="http://www.boost.org/libs/statechart/doc/faq.html#Dll">here</a>
-                for more information.
+                This looks like a configuration problem.
             </note>
-        </mark-expected-failures>
-        <mark-expected-failures reason="?">
-            <test name="CameraExample"/>
-            <test name="CustomReactionTest*"/>
-            <test name="PerformanceExample"/>
-            <toolset name="cw-9*"/>
-            <note author="Andreas Huber" refid="29"/>
-        </mark-expected-failures>
-        <mark-expected-failures reason="?">
-            <test name="CustomReactionTest*"/>
-            <toolset name="hp_cxx-71*"/>
-            <note author="Andreas Huber" refid="29"/>
         </mark-expected-failures>
         <mark-expected-failures reason="?">
             <test name="TransitionTest*"/>
-            <toolset name="cw-9*"/>
-            <toolset name="hp_cxx-71*"/>
-            <toolset name="intel-linux-9.1"/>
-            <toolset name="intel-linux-10*"/>
-            <toolset name="intel-darwin-9.1"/>
             <toolset name="intel-darwin-10*"/>
-            <toolset name="vacpp-8.0"/>
-            <note author="Andreas Huber" refid="29"/>
-        </mark-expected-failures>
-        <mark-expected-failures reason="?">
-            <test name="TransitionTestBoth"/>
-            <test name="TransitionTestNative"/>
-            <toolset name="pathscale-3.1"/>
-            <note author="Andreas Huber" refid="29"/>
-        </mark-expected-failures>
-        <mark-expected-failures reason="?">
-            <test name="InvalidTransitionTest1Relaxed"/>
-            <test name="StopWatchExample"/>
-            <toolset name="vacpp-8.0"/>
-            <note author="Andreas Huber" refid="29"/>
-        </mark-expected-failures>
-        <mark-expected-failures reason="?">
-            <test name="CustomReactionTest*"/>
-            <toolset name="acc*"/>
-            <note author="Andreas Huber" refid="29"/>
-        </mark-expected-failures>
-        <mark-expected-failures>
-            <test name="StopWatch*"/>
-            <toolset name="msvc-8.0~wm5~stlport5.1"/>
-            <note author="Andreas Huber">
-                This looks like a std library or configuration bug. Since
-                difftime is only used in the example, this failure can be
-                ignored.
-            </note>
-        </mark-expected-failures>
-        <mark-expected-failures reason="?">
-            <test name="DllTest*"/>
-            <toolset name="cygwin-gcc-stdcxx-4.2.1"/>
-            <toolset name="msvc-8.0~wm5~stlport5.1"/>
+            <toolset name="intel-linux-10*"/>
+            <toolset name="gcc-4.3.2_gnu++0x"/>
+            <toolset name="*mingw_4.3.3"/>
+            <toolset name="opencc-4.2*"/>
+            <toolset name="pathscale-3.2"/>
             <note author="Andreas Huber" refid="29"/>
         </mark-expected-failures>
     </library>
@@ -4987,6 +4911,16 @@ These tests will fail in most compilers that don't support rvalue references.
 
     <!-- type_traits -->
     <library name="type_traits">
+       <mark-expected-failures>
+          <test name="has_operator_new_test"/>
+          <test name="make_signed_test"/>
+          <test name="make_unsigned_test"/>
+          <toolset name="msvc-7.1"/>
+          <note author="John Maddock">
+             Apparently the compiler can't cope with these - later versions are fine though.
+             Probably work-round-able if someone would care to look into these.
+          </note>
+       </mark-expected-failures>
         <mark-expected-failures>
             <test name="function_traits_test"/>
             <test name="remove_bounds_test"/>
@@ -5216,6 +5150,15 @@ These tests will fail in most compilers that don't support rvalue references.
                 work by someone who has this compiler.
             </note>
         </mark-unusable>
+       <mark-expected-failures>
+          <test name="test_type_traits"/>
+          <test name="std_test_type_traits"/>
+          <toolset name="msvc-7.1"/>
+          <note author="John Maddock">
+             Later versions of MSVC are required for these tests - the issues may
+             be work-round-able if anyone cares enough to look into them.
+          </note>
+       </mark-expected-failures>
         <mark-expected-failures>
             <test name="test_mem_fn_tricky"/>
             <test name="test_bind_tricky"/>
@@ -5905,6 +5848,17 @@ These tests will fail in most compilers that don't support rvalue references.
                 <note refid="3" author="D. Gregor"/>
             </mark-failure>
         </test>
+        <test name="value_init_test">
+          <mark-failure>
+            <toolset name="intel-9.0*"/>
+            <toolset name="intel-linux-9.0*"/>
+            <note author="Niels Dekker" date="2009-07-01">
+            When I made the conversion from value_initialized&lt;T&gt; to T&amp;
+            const-correct, this specific compiler version gave compile errors.
+            See also: Ticket #2548 - "Let's fix the logical constness of value_initialized!"
+            </note>
+          </mark-failure>
+        </test>
         <mark-expected-failures>
             <test name="value_init_test"/>
             <toolset name="msvc-6.5*"/>
@@ -6359,3 +6313,4 @@ These tests will fail in most compilers that don't support rvalue references.
     </note>
 
 </explicit-failures-markup>
+
