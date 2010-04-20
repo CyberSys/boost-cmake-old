@@ -73,11 +73,11 @@ namespace boost { namespace proto
             BOOST_PROTO_FUSION_DEFINE_CATEGORY(fusion::random_access_traversal_tag)
             BOOST_PROTO_FUSION_DEFINE_TAG(tag::proto_expr_iterator)
 
-            expr_iterator(Expr &e)
+            expr_iterator(Expr const &e)
               : expr(e)
             {}
 
-            Expr &expr;
+            Expr const &expr;
         };
 
         template<typename Expr>
@@ -198,9 +198,7 @@ namespace boost { namespace proto
             typename fusion::BOOST_PROTO_FUSION_RESULT_OF::pop_front<Expr const>::type
             operator ()(Expr const &e) const
             {
-                // Work around a const-correctness issue in Fusion
-                typedef typename fusion::result_of::pop_front<Expr>::type result_type;
-                return result_type(fusion::next(fusion::begin(e)), fusion::end(e));
+                return fusion::pop_front(e);
             }
         };
 
@@ -231,9 +229,7 @@ namespace boost { namespace proto
             typename fusion::BOOST_PROTO_FUSION_RESULT_OF::reverse<Expr const>::type
             operator ()(Expr const &e) const
             {
-                // Work around a const-correctness issue in Fusion
-                typedef typename fusion::result_of::reverse<Expr>::type result_type;
-                return result_type(e);
+                return fusion::reverse(e);
             }
         };
     }
@@ -407,7 +403,7 @@ namespace boost { namespace fusion
             {
                 typedef
                     typename proto::result_of::child_c<
-                        typename Iterator::expr_type &
+                        typename Iterator::expr_type const &
                       , Iterator::index
                     >::type
                 type;
@@ -423,7 +419,7 @@ namespace boost { namespace fusion
             {
                 typedef
                     typename proto::result_of::value<
-                        typename Iterator::expr_type &
+                        typename Iterator::expr_type const &
                     >::type
                 type;
 
@@ -531,7 +527,7 @@ namespace boost { namespace fusion
             {
                 typedef proto::detail::expr_iterator<Sequence, 0> type;
 
-                static type call(Sequence &seq)
+                static type call(Sequence const &seq)
                 {
                     return type(seq);
                 }
@@ -554,7 +550,7 @@ namespace boost { namespace fusion
                     >
                 type;
 
-                static type call(Sequence &seq)
+                static type call(Sequence const &seq)
                 {
                     return type(seq);
                 }
