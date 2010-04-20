@@ -24,6 +24,15 @@
 #ifndef BOOST_ARRAY_HPP
 #define BOOST_ARRAY_HPP
 
+#include <boost/detail/workaround.hpp>
+
+#if BOOST_WORKAROUND(BOOST_MSVC, >= 1400)  
+# pragma warning(push)  
+# pragma warning(disable:4996) // 'std::equal': Function call with parameters that may be unsafe
+# pragma warning(disable:4510) // boost::array<T,N>' : default constructor could not be generated 
+# pragma warning(disable:4610) // warning C4610: class 'boost::array<T,N>' can never be instantiated - user defined constructor required 
+#endif
+
 #include <cstddef>
 #include <stdexcept>
 #include <boost/assert.hpp>
@@ -321,5 +330,10 @@ namespace boost {
     }
 
 } /* namespace boost */
+
+
+#if BOOST_WORKAROUND(BOOST_MSVC, >= 1400)  
+# pragma warning(pop)  
+#endif 
 
 #endif /*BOOST_ARRAY_HPP*/
