@@ -118,6 +118,8 @@ test-suite numeric/uBLAS
       ]
       [ run comp_mat_erase.cpp
       ]
+      [ run sparse_view_test.cpp
+      ]
       [ run begin_end.cpp
       ]
       [ run num_columns.cpp
@@ -125,5 +127,7 @@ test-suite numeric/uBLAS
       [ run num_rows.cpp
       ]
       [ run size.cpp
+      ]
+      [ run test_coordinate_matrix_sort.cpp
       ]
     ;
