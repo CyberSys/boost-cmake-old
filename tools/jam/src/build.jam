@@ -27,7 +27,7 @@ else { . = "." ; }
 ./ ?= "" ;
 
 # Info about what we are building.
-_VERSION_ = 3 1 17 ;
+_VERSION_ = 3 1 19 ;
 NAME = boost-jam ;
 VERSION = $(_VERSION_:J=$(.)) ;
 RELEASE = 1 ;
@@ -486,7 +486,7 @@ jam.source =
     option.c output.c parse.c regexp.c rules.c
     scan.c search.c subst.c w32_getreg.c
     timestamp.c variable.c modules.c strings.c filesys.c
-    builtins.c pwd.c class.c native.c modules/set.c
+    builtins.c pwd.c class.c native.c md5.c modules/set.c
     modules/path.c modules/regex.c modules/property-set.c
     modules/sequence.c modules/order.c
     ;
