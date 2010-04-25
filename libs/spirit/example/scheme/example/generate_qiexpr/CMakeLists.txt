@@ -1,0 +1,10 @@
+foreach(
+    example
+    generate_qiexpr
+    generate_qi_test
+)
+boost_add_executable(
+    ${example}
+)
+endforeach(
+)

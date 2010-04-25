@@ -1,0 +1,13 @@
+foreach(
+    example
+    mini_ca
+    mini_c
+    mini_cb
+    mini_cc
+    mini_cd
+)
+boost_add_executable(
+    ${example}
+)
+endforeach(
+)
