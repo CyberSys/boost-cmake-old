@@ -11,7 +11,7 @@ boost_library_project(
   algorithm
   #  SRCDIRS 
   TESTDIRS  minmax/test string/test
-  EXAMPLEDIRS minmax/example string/example
+  # EXAMPLEDIRS minmax/example string/example
   HEADERS algorithm
   #  DOCDIRS 
   DESCRIPTION  "A library of various algorithms."
