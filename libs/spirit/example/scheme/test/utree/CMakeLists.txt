@@ -1,0 +1,9 @@
+foreach(
+    example
+    utree_test
+)
+boost_add_executable(
+    ${example}
+)
+endforeach(
+)

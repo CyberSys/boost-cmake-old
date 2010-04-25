@@ -1,0 +1,11 @@
+foreach(
+    example
+    parse_qi_test
+    parse_qiexpr
+    generate_sexpr_to_ostream
+)
+boost_add_executable(
+    ${example}
+)
+endforeach(
+)

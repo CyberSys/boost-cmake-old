@@ -17,6 +17,21 @@ boost_library_project(
   spirit
   #  SRCDIRS 
   TESTDIRS  test
+  EXAMPLESDIRS
+    example/qi/calc6
+    example/qi/calc7
+    example/qi
+    example/qi/mini_c
+    example/lex/static_lexer
+    example/lex
+    example/karma
+    example/support
+    example/scheme/test/utree
+    example/scheme/test/scheme
+    example/scheme/example/sexpr
+    example/scheme/example/generate_qiexpr
+    example/scheme/example/scheme
+    example/scheme/example/parse_qiexpr
   HEADERS ${lib_headers}
   #  DOCDIRS 
   DESCRIPTION  "LL parser framework represents parsers directly as EBNF grammars in inlined C++."

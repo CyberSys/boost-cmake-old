@@ -1,0 +1,11 @@
+foreach(
+    example
+    scheme_test1
+    scheme_test2
+    scheme_test3
+)
+boost_add_executable(
+    ${example}
+)
+endforeach(
+)
