@@ -1,9 +1,5 @@
-foreach(
-    example
-    generate_qi_test
-)
 boost_add_executable(
-    ${example}
-)
-endforeach(
+    generate_qi_test
+    generate_qi_test.cpp
+    generate_qiexpr.cpp
 )
