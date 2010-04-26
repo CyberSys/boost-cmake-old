@@ -11,7 +11,7 @@
 #include <iostream>
 #include <fstream>
 
-void ignore_bom(std::ifstream& in)
+int ignore_bom(char const* filename, std::ifstream& in)
 {
     // Ignore the BOM marking the beginning of a UTF-8 file in Windows
     char c = in.peek();
@@ -27,6 +27,7 @@ void ignore_bom(std::ifstream& in)
             return 1;
         }
     }
+    return 0;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -43,7 +44,11 @@ int main()
             << filename << std::endl;
         return -1;
     }
-    ignore_bom(in);
+    int ignore_result = ignore_bom(filename, in);
+    if (ignore_result)
+    {
+        return ignore_result;
+    }
 
     using scheme::interpreter;
     using scheme::function;
