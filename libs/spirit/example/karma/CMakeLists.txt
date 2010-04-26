@@ -6,7 +6,7 @@ foreach(
     generate_code
     quick_start1
     customize_use_as_container
-    printf_style_double_format
+    # printf_style_double_format
     num_list1
     num_list2
     num_list3
@@ -21,7 +21,7 @@ foreach(
     # auto_facilities
     num_matrix
     customize_embedded_container
-    reference
+    # reference
     mini_xml_karma
     key_value_sequence
     quoted_strings
