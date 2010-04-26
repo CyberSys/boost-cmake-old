@@ -1,13 +1,8 @@
-foreach(
-    example
-    mini_ca
-    mini_c
-    mini_cb
-    mini_cc
-    mini_cd
-)
 boost_add_executable(
-    ${example}
-)
-endforeach(
+    mini_c
+    mini_c.cpp
+    mini_ca.cpp
+    mini_cb.cpp
+    mini_cc.cpp
+    mini_cd.cpp
 )

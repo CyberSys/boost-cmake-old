@@ -1,12 +1,7 @@
-foreach(
-    example
-    calc6a
-    calc6b
-    calc6c
-    calc6
-)
 boost_add_executable(
-    ${example}
-)
-endforeach(
+    calc6
+    calc6.cpp
+    calc6a.cpp
+    calc6b.cpp
+    calc6c.cpp
 )
