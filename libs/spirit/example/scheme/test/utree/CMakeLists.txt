@@ -4,6 +4,8 @@ foreach(
 )
 boost_add_executable(
     ${example}
+    COMPILE_FLAGS
+    "-I../.."
 )
 endforeach(
 )
