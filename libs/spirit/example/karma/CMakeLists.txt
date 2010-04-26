@@ -13,7 +13,7 @@ foreach(
     classify_char
     customize_counter
     # calc2_ast_vm
-    simple_columns_directive
+    # simple_columns_directive
     escaped_string
     reorder_struct
     actions
