@@ -29,9 +29,9 @@ boost_library_project(
     example/scheme/test/utree
     example/scheme/test/scheme
     example/scheme/example/sexpr
-    example/scheme/example/generate_qiexpr
+    # example/scheme/example/generate_qiexpr
     example/scheme/example/scheme
-    example/scheme/example/parse_qiexpr
+    # example/scheme/example/parse_qiexpr
   HEADERS ${lib_headers}
   #  DOCDIRS 
   DESCRIPTION  "LL parser framework represents parsers directly as EBNF grammars in inlined C++."
