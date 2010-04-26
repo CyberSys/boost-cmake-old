@@ -62,28 +62,43 @@ struct argument {
 
 //////////////////////////////////
 actor<argument<0> > const arg1 = argument<0>();
+actor<argument<0> > const _1 = argument<0>();
 actor<argument<1> > const arg2 = argument<1>();
+actor<argument<1> > const _2 = argument<1>();
 actor<argument<2> > const arg3 = argument<2>();
+actor<argument<2> > const _3 = argument<2>();
 
 #if PHOENIX_LIMIT > 3
 actor<argument<3> > const arg4 = argument<3>();
+actor<argument<3> > const _4 = argument<3>();
 actor<argument<4> > const arg5 = argument<4>();
+actor<argument<4> > const _5 = argument<4>();
 actor<argument<5> > const arg6 = argument<5>();
+actor<argument<5> > const _6 = argument<5>();
 
 #if PHOENIX_LIMIT > 6
 actor<argument<6> > const arg7 = argument<6>();
+actor<argument<6> > const _7 = argument<6>();
 actor<argument<7> > const arg8 = argument<7>();
+actor<argument<7> > const _8 = argument<7>();
 actor<argument<8> > const arg9 = argument<8>();
+actor<argument<8> > const _9 = argument<8>();
 
 #if PHOENIX_LIMIT > 9
 actor<argument<9> > const arg10 = argument<9>();
+actor<argument<9> > const _10 = argument<9>();
 actor<argument<10> > const arg11 = argument<10>();
+actor<argument<10> > const _11 = argument<10>();
 actor<argument<11> > const arg12 = argument<11>();
+actor<argument<11> > const _12 = argument<11>();
 
 #if PHOENIX_LIMIT > 12
 actor<argument<12> > const arg13 = argument<12>();
+actor<argument<12> > const _13 = argument<12>();
 actor<argument<13> > const arg14 = argument<13>();
+actor<argument<13> > const _14 = argument<13>();
 actor<argument<14> > const arg15 = argument<14>();
+actor<argument<14> > const _15 = argument<14>();
 
 #endif
 #endif
