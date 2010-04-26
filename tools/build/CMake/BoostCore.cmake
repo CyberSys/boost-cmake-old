@@ -1365,7 +1365,7 @@ macro(boost_add_executable EXENAME)
   # Note: ARGS is here to support the use of boost_add_executable in
   # the testing code.
   parse_arguments(THIS_EXE
-    "DEPENDS;COMPILE_FLAGS;LINK_FLAGS;LINK_LIBS;OUTPUT_NAME;ARGS;${BOOST_ADD_ARG_NAMES}"
+    "DEPENDS;COMPILE_FLAGS;LINK_FLAGS;LINK_LIBS;OUTPUT_NAME;ARGS;TARGET_PREFIX;${BOOST_ADD_ARG_NAMES}"
     "NO_INSTALL;${BOOST_ADDEXE_OPTION_NAMES}"
     ${ARGN}
     )
@@ -1390,9 +1390,9 @@ macro(boost_add_executable EXENAME)
   # message("THIS_EXE_VARIANT=${THIS_EXE_VARIANT}")
   # Possibly hyphenate exe's name
   if (THIS_PROJECT_IS_TOOL)
-    set(THIS_EXE_NAME ${EXENAME})
+    set(THIS_EXE_NAME ${THIS_EXE_TARGET_PREFIX}${EXENAME})
   else()
-    set(THIS_EXE_NAME ${BOOST_PROJECT_NAME}-${EXENAME})
+    set(THIS_EXE_NAME ${THIS_EXE_TARGET_PREFIX}${BOOST_PROJECT_NAME}-${EXENAME})
   endif()
 
   # Compute the name of the variant targets that we'll be linking
