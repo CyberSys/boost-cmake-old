@@ -27,7 +27,7 @@ foreach(
     calc5
     calc4_debug
     reference
-    boost_array
+    # boost_array
     roman
     nabialek
     typeof
