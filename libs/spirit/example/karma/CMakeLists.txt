@@ -26,7 +26,7 @@ foreach(
     key_value_sequence
     quoted_strings
     calc2_ast_rpn
-    basic_facilities
+    # basic_facilities
 )
 boost_add_executable(
     ${example}
