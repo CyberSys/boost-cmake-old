@@ -36,6 +36,8 @@ foreach(
 )
 boost_add_executable(
     ${example}
+    TARGET_PREFIX
+    "qi-"
 )
 endforeach(
 )

@@ -17,7 +17,7 @@ boost_library_project(
   spirit
   #  SRCDIRS 
   TESTDIRS  test
-  EXAMPLESDIRS
+  EXAMPLEDIRS
     example/qi/calc6
     example/qi/calc7
     example/qi
