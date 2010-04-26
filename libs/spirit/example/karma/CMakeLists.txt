@@ -1,7 +1,7 @@
 foreach(
     example
     complex_number
-    complex_number_adapt
+    # complex_number_adapt
     # calc2_ast_dump
     generate_code
     quick_start1
@@ -12,7 +12,7 @@ foreach(
     num_list3
     classify_char
     customize_counter
-    calc2_ast_vm
+    # calc2_ast_vm
     simple_columns_directive
     escaped_string
     reorder_struct
