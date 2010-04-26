@@ -1,8 +1,5 @@
 foreach(
     example
-    calc6a
-    calc6b
-    calc6c
     calc6
 )
 boost_add_executable(
