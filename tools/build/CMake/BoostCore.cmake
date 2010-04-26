@@ -1392,7 +1392,7 @@ macro(boost_add_executable EXENAME)
   if (THIS_PROJECT_IS_TOOL)
     set(THIS_EXE_NAME ${THIS_EXE_TARGET_PREFIX}${EXENAME})
   else()
-    set(THIS_EXE_NAME ${THIS_EXE_TARGET_PREFIX}${BOOST_PROJECT_NAME}-${EXENAME})
+    set(THIS_EXE_NAME ${BOOST_PROJECT_NAME}-${THIS_EXE_TARGET_PREFIX}${EXENAME})
   endif()
 
   # Compute the name of the variant targets that we'll be linking
