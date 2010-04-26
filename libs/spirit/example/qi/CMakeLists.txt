@@ -8,7 +8,7 @@ foreach(
     porting_guide_qi
     key_value_sequence_empty_value
     parse_date
-    adapt_template_struct
+    # adapt_template_struct
     num_list1
     num_list2
     num_list3
