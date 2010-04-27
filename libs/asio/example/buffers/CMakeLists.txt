@@ -1,0 +1,9 @@
+foreach(
+    example
+    reference_counted
+)
+boost_add_executable(
+    ${example}
+)
+endforeach(
+)

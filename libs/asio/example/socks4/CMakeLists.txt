@@ -1,0 +1,9 @@
+foreach(
+    example
+    sync_client
+)
+boost_add_executable(
+    ${example}
+)
+endforeach(
+)

@@ -1,0 +1,10 @@
+foreach(
+    example
+    tick_count_timer
+    time_t_timer
+)
+boost_add_executable(
+    ${example}
+)
+endforeach(
+)

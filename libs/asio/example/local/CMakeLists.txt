@@ -1,0 +1,12 @@
+foreach(
+    example
+    stream_server
+    iostream_client
+    stream_client
+    connect_pair
+)
+boost_add_executable(
+    ${example}
+)
+endforeach(
+)

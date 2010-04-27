@@ -1,0 +1,9 @@
+foreach(
+    example
+    ping
+)
+boost_add_executable(
+    ${example}
+)
+endforeach(
+)

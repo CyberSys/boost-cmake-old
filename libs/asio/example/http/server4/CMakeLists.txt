@@ -1,0 +1,10 @@
+foreach(
+    example
+    posix_main
+    win_main
+)
+boost_add_executable(
+    ${example}
+)
+endforeach(
+)
