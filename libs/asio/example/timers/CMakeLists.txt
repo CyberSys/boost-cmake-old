@@ -1,10 +1,16 @@
-foreach(
-    example
-    tick_count_timer
+boost_add_executable(
     time_t_timer
+    DEPENDS
+    boost_system
+)
+if(
+    WIN32
 )
 boost_add_executable(
-    ${example}
+    tick_count_timer
+    DEPENDS
+    boost_system
 )
-endforeach(
+endif(
+    WIN32
 )
