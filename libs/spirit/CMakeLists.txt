@@ -26,7 +26,7 @@ boost_library_project(
     example/lex
     example/karma
     example/support
-    example/scheme/test/qi
+    # example/scheme/test/qi
     example/scheme/test/utree
     example/scheme/test/scheme
     example/scheme/example/sexpr
