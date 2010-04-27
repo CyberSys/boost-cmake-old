@@ -1,9 +1,10 @@
-foreach(
-    example
-    daytime_client
-)
 boost_add_executable(
-    ${example}
-)
-endforeach(
+    daytime_client
+    daytime_client.cpp
+    logger_service.cpp
+    DEPENDS
+    boost_thread
+    boost_system
+    TARGET_PREFIX
+    "services-"
 )

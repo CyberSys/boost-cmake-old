@@ -5,6 +5,10 @@ foreach(
 )
 boost_add_executable(
     ${example}
+    DEPENDS
+    boost_system
+    TARGET_PREFIX
+    "porthopper-"
 )
 endforeach(
 )
