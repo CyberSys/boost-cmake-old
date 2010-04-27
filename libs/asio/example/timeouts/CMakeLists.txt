@@ -1,0 +1,12 @@
+foreach(
+    example
+    datagram_receive_timeout
+    stream_receive_timeout
+    connect_timeout
+    accept_timeout
+)
+boost_add_executable(
+    ${example}
+)
+endforeach(
+)

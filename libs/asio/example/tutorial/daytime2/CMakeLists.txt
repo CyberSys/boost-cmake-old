@@ -1,0 +1,9 @@
+foreach(
+    example
+    server
+)
+boost_add_executable(
+    ${example}
+)
+endforeach(
+)

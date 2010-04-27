@@ -1,0 +1,10 @@
+foreach(
+    example
+    daytime_server
+    daytime_client
+)
+boost_add_executable(
+    ${example}
+)
+endforeach(
+)

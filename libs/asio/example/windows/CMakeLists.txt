@@ -1,0 +1,9 @@
+foreach(
+    example
+    transmit_file
+)
+boost_add_executable(
+    ${example}
+)
+endforeach(
+)
