@@ -50,7 +50,7 @@
                   , State                                                                           \
                   , Data                                                                            \
                 >()(                                                                                \
-                    proto::child_c<N>(e), s, d                                                      \
+                    proto::functional::child_c<N>(e), s, d                                          \
                 )                                                                                   \
                 /**/
 
