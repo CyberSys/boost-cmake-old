@@ -3,8 +3,8 @@
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying 
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#if !defined(BOOST_SPIRIT_LEX_LEXER_STATIC_FUNCTOR_DATA_FEB_10_2008_0755PM)
-#define BOOST_SPIRIT_LEX_LEXER_STATIC_FUNCTOR_DATA_FEB_10_2008_0755PM
+#if !defined(BOOST_SPIRIT_LEX_LEXER_FUNCTOR_DATA_JUN_10_2009_0954AM)
+#define BOOST_SPIRIT_LEX_LEXER_FUNCTOR_DATA_JUN_10_2009_0954AM
 
 #if defined(_MSC_VER)
 #pragma once
@@ -17,34 +17,20 @@
 #include <boost/spirit/home/lex/lexer/lexertl/semantic_action_data.hpp>
 #include <boost/spirit/home/lex/lexer/lexertl/wrap_action.hpp>
 #include <boost/mpl/bool.hpp>
-#include <boost/algorithm/string/predicate.hpp>
 
 namespace boost { namespace spirit { namespace lex { namespace lexertl
 { 
     namespace detail
     {
         ///////////////////////////////////////////////////////////////////////
-        template <typename Char, typename F>
-        inline std::size_t get_state_id(Char const* state, F f
-          , std::size_t numstates)
-        {
-            for (std::size_t i = 0; i < numstates; ++i)
-            {
-                if (boost::algorithm::equals(f(i), state))
-                    return i;
-            }
-            return boost::lexer::npos;
-        }
-
-        ///////////////////////////////////////////////////////////////////////
         template <typename Iterator, typename HasActors, typename HasState
           , typename TokenValue>
-        struct static_data;    // no default specialization
+        struct data;    // no default specialization
 
         ///////////////////////////////////////////////////////////////////////
-        //  doesn't support no state and no actors
+        //  neither supports state, nor actors
         template <typename Iterator, typename TokenValue>
-        struct static_data<Iterator, mpl::false_, mpl::false_, TokenValue>
+        struct data<Iterator, mpl::false_, mpl::false_, TokenValue>
         {
         protected:
             typedef typename 
@@ -57,21 +43,18 @@ namespace boost { namespace spirit { namespace lex { namespace lexertl
             typedef std::size_t state_type;
             typedef char_type const* state_name_type;
             typedef unused_type semantic_actions_type;
-            typedef detail::wrap_action<unused_type, Iterator, static_data
-              , std::size_t> wrap_action_type;
- 
-            typedef std::size_t (*next_token_functor)(std::size_t&, 
-                bool&, Iterator&, Iterator const&, std::size_t&);
-            typedef char_type const* (*get_state_name_type)(std::size_t);
+            typedef detail::wrap_action<unused_type, Iterator, data, std::size_t>
+                wrap_action_type;
+
+            typedef unused_type next_token_functor;
+            typedef unused_type get_state_name_type;
 
             // initialize the shared data 
             template <typename IterData>
-            static_data (IterData const& data, Iterator& first
-                  , Iterator const& last)
-              : first_(first), last_(last) 
-              , next_token_(data.next_)
-              , get_state_name_(data.get_state_name_)
-              , bol_(data.bol_) {}
+            data (IterData const& data_, Iterator& first, Iterator const& last)
+              : first_(first), last_(last)
+              , state_machine_(data_.state_machine_)
+              , rules_(data_.rules_) {}
 
             // The following functions are used by the implementation of the 
             // placeholder '_state'.
@@ -88,13 +71,10 @@ namespace boost { namespace spirit { namespace lex { namespace lexertl
                 BOOST_STATIC_ASSERT(false);
 #endif
             }
-            char_type const* get_state_name() const 
-            { 
-                return get_state_name_(0); 
-            }
-            std::size_t get_state_id(char_type const*) const 
-            { 
-                return 0; 
+            char_type const* get_state_name() const { return rules_.initial(); }
+            std::size_t get_state_id (char_type const*) const
+            {
+                return 0;
             }
 
             // The function get_eoi() is used by the implementation of the 
@@ -120,7 +100,7 @@ namespace boost { namespace spirit { namespace lex { namespace lexertl
                 return it; 
             }
 
-            // The function more() is used by the implementation of the support 
+            // The function more() is used by the implemention of the support 
             // function lex::more(). Its functionality is equivalent to flex'
             // function yymore(): it tells the lexer that the next time it 
             // matches a rule, the corresponding token should be appended onto 
@@ -161,8 +141,9 @@ namespace boost { namespace spirit { namespace lex { namespace lexertl
             // underlying input sequence. 
             std::size_t next(Iterator& end, std::size_t& unique_id)
             {
-                std::size_t state;
-                return next_token_(state, bol_, end, last_, unique_id);
+                typedef basic_iterator_tokeniser<Iterator> tokenizer;
+                return tokenizer::next(state_machine_, first_, end, last_
+                  , unique_id);
             }
 
             // nothing to invoke, so this is empty
@@ -190,24 +171,22 @@ namespace boost { namespace spirit { namespace lex { namespace lexertl
             Iterator& first_;
             Iterator last_;
 
-            next_token_functor next_token_;
-            get_state_name_type get_state_name_;
-
-            bool bol_;
+            boost::lexer::basic_state_machine<char_type> const& state_machine_;
+            boost::lexer::basic_rules<char_type> const& rules_;
 
         private:
             // silence MSVC warning C4512: assignment operator could not be generated
-            static_data& operator= (static_data const&);
+            data& operator= (data const&);
         };
 
         ///////////////////////////////////////////////////////////////////////
-        //  doesn't support no actors
+        //  doesn't support lexer semantic actions
         template <typename Iterator, typename TokenValue>
-        struct static_data<Iterator, mpl::false_, mpl::true_, TokenValue>
-          : static_data<Iterator, mpl::false_, mpl::false_, TokenValue>
+        struct data<Iterator, mpl::false_, mpl::true_, TokenValue>
+          : data<Iterator, mpl::false_, mpl::false_, TokenValue>
         {
         protected:
-            typedef static_data<Iterator, mpl::false_, mpl::false_, TokenValue> base_type;
+            typedef data<Iterator, mpl::false_, mpl::false_, TokenValue> base_type;
             typedef typename base_type::char_type char_type;
 
         public:
@@ -220,21 +199,19 @@ namespace boost { namespace spirit { namespace lex { namespace lexertl
 
             // initialize the shared data 
             template <typename IterData>
-            static_data (IterData const& data, Iterator& first
-                  , Iterator const& last)
-              : base_type(data, first, last), state_(0)
-              , num_states_(data.num_states_) {}
+            data (IterData const& data_, Iterator& first, Iterator const& last)
+              : base_type(data_, first, last)
+              , state_(0) {}
 
             // The following functions are used by the implementation of the 
             // placeholder '_state'.
             void set_state_name (char_type const* new_state) 
             { 
-                std::size_t state_id = lexertl::detail::get_state_id(new_state
-                  , this->get_state_name_, num_states_);
+                std::size_t state_id = this->rules_.state(new_state);
 
-                // if the following assertion fires you've probably been using 
+                // If the following assertion fires you've probably been using 
                 // a lexer state name which was not defined in your token 
-                // definition
+                // definition.
                 BOOST_ASSERT(state_id != boost::lexer::npos);
 
                 if (state_id != boost::lexer::npos)
@@ -242,12 +219,11 @@ namespace boost { namespace spirit { namespace lex { namespace lexertl
             }
             char_type const* get_state_name() const
             {
-                return this->get_state_name_(state_);
+                return this->rules_.state(state_);
             }
-            std::size_t get_state_id(char_type const* state) const 
-            { 
-                return lexertl::detail::get_state_id(state
-                  , this->get_state_name_, num_states_); 
+            std::size_t get_state_id (char_type const* state) const
+            {
+                return this->rules_.state(state);
             }
 
             // the functions next() and get_state() are used by the functor 
@@ -257,8 +233,9 @@ namespace boost { namespace spirit { namespace lex { namespace lexertl
             // underlying input sequence. 
             std::size_t next(Iterator& end, std::size_t& unique_id)
             {
-                return this->next_token_(state_, this->bol_, end, this->last_
-                  , unique_id);
+                typedef basic_iterator_tokeniser<Iterator> tokenizer;
+                return tokenizer::next(this->state_machine_, state_, 
+                    this->get_first(), end, this->get_eoi(), unique_id);
             }
 
             std::size_t& get_state() { return state_; }
@@ -266,25 +243,24 @@ namespace boost { namespace spirit { namespace lex { namespace lexertl
 
         protected:
             std::size_t state_;
-            std::size_t num_states_;
 
         private:
             // silence MSVC warning C4512: assignment operator could not be generated
-            static_data& operator= (static_data const&);
+            data& operator= (data const&);
         };
 
         ///////////////////////////////////////////////////////////////////////
-        //  does support actors, but may have no state
+        //  does support lexer semantic actions, may support state
         template <typename Iterator, typename HasState, typename TokenValue>
-        struct static_data<Iterator, mpl::true_, HasState, TokenValue> 
-          : static_data<Iterator, mpl::false_, HasState, TokenValue>
+        struct data<Iterator, mpl::true_, HasState, TokenValue> 
+          : data<Iterator, mpl::false_, HasState, TokenValue>
         {
         public:
-            typedef semantic_actions<Iterator, HasState, static_data>
+            typedef semantic_actions<Iterator, HasState, data> 
                 semantic_actions_type;
 
         protected:
-            typedef static_data<Iterator, mpl::false_, HasState, TokenValue> base_type;
+            typedef data<Iterator, mpl::false_, HasState, TokenValue> base_type;
             typedef typename base_type::char_type char_type;
             typedef typename semantic_actions_type::functor_wrapper_type
                 functor_wrapper_type;
@@ -296,13 +272,12 @@ namespace boost { namespace spirit { namespace lex { namespace lexertl
             typedef typename base_type::state_name_type state_name_type;
 
             typedef detail::wrap_action<functor_wrapper_type
-              , Iterator, static_data, std::size_t> wrap_action_type;
+              , Iterator, data, std::size_t> wrap_action_type;
 
             template <typename IterData>
-            static_data (IterData const& data, Iterator& first
-                  , Iterator const& last)
-              : base_type(data, first, last)
-              , actions_(data.actions_), hold_()
+            data (IterData const& data_, Iterator& first, Iterator const& last)
+              : base_type(data_, first, last)
+              , actions_(data_.actions_), hold_()
               , value_(iterator_range<Iterator>(first, last))
               , has_hold_(false), has_value_(false) {}
 
@@ -322,19 +297,19 @@ namespace boost { namespace spirit { namespace lex { namespace lexertl
             // token back to the input stream). 
             Iterator const& less(Iterator& it, int n) 
             {
-                it = this->first_;
+                it = this->get_first();
                 std::advance(it, n);
                 return it;
             }
 
-            // The function more() is used by the implementation of the support 
+            // The function more() is used by the implemention of the support 
             // function lex::more(). Its functionality is equivalent to flex'
             // function yymore(): it tells the lexer that the next time it 
             // matches a rule, the corresponding token should be appended onto 
             // the current token value rather than replacing it.
             void more()
             {
-                hold_ = this->first_;
+                hold_ = this->get_first();
                 has_hold_ = true;
             }
 
@@ -344,9 +319,9 @@ namespace boost { namespace spirit { namespace lex { namespace lexertl
             // a/b  (match a, but only when followed by b)
             bool lookahead(std::size_t id)
             {
-                Iterator end = this->first_;
+                Iterator end = this->get_first();
                 std::size_t unique_id = boost::lexer::npos;
-                return id == this->next(end, unique_id);
+                return id == next(end, unique_id);
             }
 
             // The adjust_start() and revert_adjust_start() are helper 
@@ -357,14 +332,14 @@ namespace boost { namespace spirit { namespace lex { namespace lexertl
                 if (!has_hold_)
                     return false;
 
-                std::swap(this->first_, hold_);
+                std::swap(this->get_first(), hold_);
                 has_hold_ = false;
                 return true;
             }
             void revert_adjust_start()
             {
                 // this will be called only if adjust_start above returned true
-                std::swap(this->first_, hold_);
+                std::swap(this->get_first(), hold_);
                 has_hold_ = true;
             }
 
@@ -390,10 +365,11 @@ namespace boost { namespace spirit { namespace lex { namespace lexertl
 
         private:
             // silence MSVC warning C4512: assignment operator could not be generated
-            static_data& operator= (static_data const&);
+            data& operator= (data const&);
         };
     }
 
 }}}}
 
 #endif
+
