@@ -4,7 +4,7 @@ foreach(
     word_count
     word_count_lexer
     #strip_comments
-    strip_comments_lexer
+    #strip_comments_lexer
     #example1
     #example2
     #example3
