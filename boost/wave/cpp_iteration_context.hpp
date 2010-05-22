@@ -145,10 +145,12 @@ struct iteration_context
 
     typedef iteration_context<ContextT, IteratorT, InputPolicyT> self_type;
 
+    typedef base_iteration_context<ContextT, IteratorT> base_type;
+
     iteration_context(ContextT& ctx, BOOST_WAVE_STRINGTYPE const &fname, 
             position_type const &act_pos, 
             boost::wave::language_support language_,
-            file_type type = main_file) 
+            base_type::file_type type = base_type::main_file) 
     :   base_iteration_context<ContextT, IteratorT>(ctx, fname, type)
     {
         InputPolicyT::template inner<self_type>::init_iterators(
