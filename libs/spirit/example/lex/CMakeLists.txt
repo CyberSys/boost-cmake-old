@@ -1,8 +1,8 @@
 foreach(
     example
     word_count_functor_flex
-    word_count
-    word_count_lexer
+    #word_count
+    #word_count_lexer
     #strip_comments
     #strip_comments_lexer
     #example1
@@ -14,7 +14,7 @@ foreach(
     reference
     #custom_token_attribute
     #print_numbers
-    word_count_functor
+    #word_count_functor
 )
 boost_add_executable(
     ${example}
