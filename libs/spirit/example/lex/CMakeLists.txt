@@ -6,8 +6,8 @@ foreach(
     strip_comments
     strip_comments_lexer
     #example1
-    example2
-    example3
+    #example2
+    #example3
     example4
     example5
     example6
