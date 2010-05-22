@@ -8,9 +8,9 @@ foreach(
     #example1
     #example2
     #example3
-    example4
-    example5
-    example6
+    #example4
+    #example5
+    #example6
     reference
     #custom_token_attribute
     print_numbers
