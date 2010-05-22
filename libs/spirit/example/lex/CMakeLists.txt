@@ -5,14 +5,14 @@ foreach(
     word_count_lexer
     strip_comments
     strip_comments_lexer
-    example1
+    #example1
     example2
     example3
     example4
     example5
     example6
     reference
-    custom_token_attribute
+    #custom_token_attribute
     print_numbers
     word_count_functor
 )
