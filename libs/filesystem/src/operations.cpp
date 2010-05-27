@@ -16,11 +16,6 @@
 
 #define _POSIX_PTHREAD_SEMANTICS  // Sun readdir_r() needs this
 
-// enable the XPG-compliant version of readdir_r() on AIX
-#if defined(_AIX)
-# define _LINUX_SOURCE_COMPAT
-#endif
-
 #if !(defined(__HP_aCC) && defined(_ILP32) && \
       !defined(_STATVFS_ACPP_PROBLEMS_FIXED))
 #define _FILE_OFFSET_BITS 64 // at worst, these defines may have no effect,
@@ -47,6 +42,7 @@
 #include <boost/scoped_array.hpp>
 #include <boost/throw_exception.hpp>
 #include <boost/detail/workaround.hpp>
+#include <cstdlib>  // for malloc, free
 
 namespace fs = boost::filesystem;
 using boost::system::error_code;
@@ -193,6 +189,7 @@ namespace
         || (ec.value() == ERROR_PATH_NOT_FOUND)
         || (ec.value() == ERROR_INVALID_NAME) // "tools/jam/src/:sys:stat.h", "//foo"
         || (ec.value() == ERROR_INVALID_DRIVE) // USB card reader with no card inserted
+        || (ec.value() == ERROR_NOT_READY) // CD/DVD drive with no disc inserted
         || (ec.value() == ERROR_INVALID_PARAMETER) // ":sys:stat.h"
         || (ec.value() == ERROR_BAD_PATHNAME) // "//nosuch" on Win64
         || (ec.value() == ERROR_BAD_NETPATH)) // "//nosuch" on Win32
@@ -1314,7 +1311,8 @@ namespace boost
           && defined(_POSIX_THREAD_SAFE_FUNCTIONS) \
           && defined(_SC_THREAD_SAFE_FUNCTIONS) \
           && (_POSIX_THREAD_SAFE_FUNCTIONS+0 >= 0) \
-          && (!defined(__hpux) || (defined(__hpux) && defined(_REENTRANT)))
+          && (!defined(__hpux) || defined(_REENTRANT)) \
+          && (!defined(_AIX) || defined(__THREAD_SAFE))
           if ( ::sysconf( _SC_THREAD_SAFE_FUNCTIONS ) >= 0 )
             { return ::readdir_r( dirp, entry, result ); }
     #     endif
