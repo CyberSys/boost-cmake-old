@@ -26,6 +26,9 @@
 #include <boost/mpl/and.hpp>
 #include <boost/mpi/detail/mpi_datatype_cache.hpp>
 #include <boost/mpl/assert.hpp>
+#include <boost/archive/basic_archive.hpp>
+#include <boost/serialization/collection_size_type.hpp>
+#include <boost/serialization/item_version_type.hpp>
 #include <utility> // for std::pair
 
 namespace boost { namespace mpi {
@@ -325,7 +328,38 @@ struct is_mpi_datatype<bool>
   : boost::mpl::bool_<true>
 {};
 
+template<>
+struct is_mpi_datatype<boost::archive::tracking_type> :
+public is_mpi_datatype<bool> {
+};
+
+template<>
+struct is_mpi_datatype<boost::archive::class_id_type> :
+public is_mpi_datatype<boost::archive::class_id_type::base_type> {
+};
+
+template<>
+struct is_mpi_datatype<boost::serialization::item_version_type> :
+public is_mpi_datatype<boost::serialization::item_version_type::base_type> {
+};
+
+template<>
+struct is_mpi_datatype<boost::archive::version_type> :
+public is_mpi_datatype<boost::archive::version_type::base_type> {
+};
+
+template<>
+struct is_mpi_datatype<boost::serialization::collection_size_type> :
+public is_mpi_datatype<std::size_t> {
+};
+
 } } // end namespace boost::mpi
+
+BOOST_ARCHIVE_STRONG_TYPEDEF_MPI(uint_least16_t, library_version_type)
+BOOST_ARCHIVE_STRONG_TYPEDEF_MPI(int_least16_t, class_id_optional_type)
+BOOST_ARCHIVE_STRONG_TYPEDEF_MPI(int_least16_t, class_id_reference_type)
+BOOST_ARCHIVE_STRONG_TYPEDEF_MPI(uint_least32_t, object_id_type)
+BOOST_ARCHIVE_STRONG_TYPEDEF_MPI(uint_least32_t, object_reference_type)
 
 // define a macro to make explicit designation of this more transparent
 #define BOOST_IS_MPI_DATATYPE(T)              \
