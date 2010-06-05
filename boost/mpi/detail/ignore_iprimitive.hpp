@@ -42,7 +42,8 @@ public:
 
     typedef is_mpi_datatype<mpl::_1> use_array_optimization;
 
-#ifndef BOOST_NO_MEMBER_TEMPLATE_FRIENDS
+//#ifndef BOOST_NO_MEMBER_TEMPLATE_FRIENDS
+#if 0 // maybe a sufficient friend declaration is also possible
     friend class archive::load_access;
 protected:
 #else
