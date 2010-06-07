@@ -38,6 +38,17 @@ class integer_traits<boost::archive::D>  :        \
 } /* boost */                                     \
 /**/
 
+#define BOOST_ARCHIVE_STRONG_TYPEDEF_MPI(T, D)    \
+namespace boost {                                 \
+namespace mpi {                                   \
+template<>                                        \
+struct is_mpi_datatype<boost::archive::D> :       \
+public is_mpi_datatype<boost::T> {                \
+};                                                \
+} /* mpi */                                       \
+} /* boost */                                     \
+/**/
+
 /* NOTE : Warning  : Warning : Warning : Warning : Warning
  * Don't ever changes this.  If you do, they previously created
  * binary archives won't be readable !!!
