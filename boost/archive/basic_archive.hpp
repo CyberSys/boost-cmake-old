@@ -34,6 +34,17 @@ namespace archive {
 #pragma warning( disable : 4244 4267 )
 #endif
 
+#define BOOST_ARCHIVE_STRONG_TYPEDEF_MPI(T, D)    \
+namespace boost {                                 \
+namespace mpi {                                   \
+template<>                                        \
+struct is_mpi_datatype<boost::archive::D> :       \
+public is_mpi_datatype<boost::T> {                \
+};                                                \
+} /* mpi */                                       \
+} /* boost */                                     \
+/**/
+
 /* NOTE : Warning  : Warning : Warning : Warning : Warning
  * Don't ever changes this.  If you do, they previously created
  * binary archives won't be readable !!!
@@ -74,8 +85,9 @@ BOOST_ARCHIVE_DECL(library_version_type)
 BOOST_ARCHIVE_VERSION();
 
 class version_type {
-private:
+public:
     typedef uint_least8_t base_type;
+private:
     base_type t;
     version_type(): t(0) {};
 public:
@@ -106,8 +118,9 @@ public:
 };
 
 class class_id_type {
-private:
+public:
     typedef int_least16_t base_type;
+private:
     base_type t;
 public:
     class_id_type() : t(0) {};

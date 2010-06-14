@@ -20,8 +20,9 @@ namespace serialization {
 #endif
 
 class item_version_type {
-private:
+public:
     typedef uint_least8_t base_type;
+private:
     base_type t;
     item_version_type(): t(0) {};
 public:
