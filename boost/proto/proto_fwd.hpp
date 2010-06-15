@@ -166,21 +166,12 @@ namespace boost { namespace proto
 
     typedef detail::ignore const ignore;
 
-    namespace argsns_
-    {
-        template<typename Arg0>
-        struct term;
+    template<typename Arg0>
+    struct term;
 
-        #define M0(Z, N, DATA)                                                                      \
-        template<BOOST_PP_ENUM_PARAMS_Z(Z, N, typename Arg)> struct BOOST_PP_CAT(list, N);          \
-        /**/
-        BOOST_PP_REPEAT_FROM_TO(1, BOOST_PP_INC(BOOST_PROTO_MAX_ARITY), M0, ~)
-        #undef M0
-    }
-
-    using argsns_::term;
-
-    #define M0(Z, N, DATA) using argsns_::BOOST_PP_CAT(list, N);
+    #define M0(Z, N, DATA)                                                                      \
+    template<BOOST_PP_ENUM_PARAMS_Z(Z, N, typename Arg)> struct BOOST_PP_CAT(list, N);          \
+    /**/
     BOOST_PP_REPEAT_FROM_TO(1, BOOST_PP_INC(BOOST_PROTO_MAX_ARITY), M0, ~)
     #undef M0
 
@@ -260,6 +251,12 @@ namespace boost { namespace proto
     template<typename First, typename Second>
     struct compose_generators;
 
+    template<typename Generator, typename Void = void>
+    struct wants_basic_expr;
+
+    template<typename Generator>
+    struct use_basic_expr;
+
     ////////////////////////////////////////////////////////////////////////////////////////////////
     template<
         typename Generator  = default_generator
@@ -272,10 +269,13 @@ namespace boost { namespace proto
 
     struct deduce_domain;
 
+    template<typename Domain, typename Tag, typename Args, typename Void = void>
+    struct base_expr;
+
     ////////////////////////////////////////////////////////////////////////////////////////////////
     namespace exprns_
     {
-        template<typename Tag, typename Args, long Arity>
+        template<typename Tag, typename Args, long Arity = Args::arity>
         struct basic_expr;
 
         template<typename Tag, typename Args, long Arity = Args::arity>
@@ -363,24 +363,10 @@ namespace boost { namespace proto
 
     namespace result_of
     {
-        template<
-            typename T
-          , typename Domain = default_domain
-          , typename Void = void
-          #ifdef BOOST_PROTO_BROKEN_PTS
-          , typename Void2 = void
-          #endif
-        >
+        template<typename T, typename Domain = default_domain>
         struct as_expr;
 
-        template<
-            typename T
-          , typename Domain = default_domain
-          , typename Void = void
-          #ifdef BOOST_PROTO_BROKEN_PTS
-          , typename Void2 = void
-          #endif
-        >
+        template<typename T, typename Domain = default_domain>
         struct as_child;
 
         template<typename Expr, typename N = mpl::long_<0> >
@@ -646,6 +632,7 @@ namespace boost { namespace proto
     #define BOOST_PROTO_UNEXPR() typedef int proto_is_expr_;
     #define BOOST_PROTO_CALLABLE() typedef void proto_is_callable_;
     #define BOOST_PROTO_AGGREGATE() typedef void proto_is_aggregate_;
+    #define BOOST_PROTO_USE_BASIC_EXPR() typedef void proto_use_basic_expr_;
 
     struct callable
     {
