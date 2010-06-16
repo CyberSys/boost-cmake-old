@@ -68,8 +68,6 @@ public:
     void load_override(class_id_optional_type & /*t*/, int){}
 
     BOOST_ARCHIVE_OR_WARCHIVE_DECL(void)
-    load_override(version_type & t, int);
-    BOOST_ARCHIVE_OR_WARCHIVE_DECL(void)
     load_override(class_name_type & t, int);
 
     BOOST_ARCHIVE_OR_WARCHIVE_DECL(void)

@@ -1,3 +1,13 @@
+// Copyright 2010 Christophe Henry
+// henry UNDERSCORE christophe AT hotmail DOT com
+// This is an extended version of the state machine available in the boost::mpl library
+// Distributed under the same license as the original.
+// Copyright for the original version:
+// Copyright 2005 David Abrahams and Aleksey Gurtovoy. Distributed
+// under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at
+// http://www.boost.org/LICENSE_1_0.txt)
+
 #include <iostream>
 // back-end
 #include <boost/msm/back/state_machine.hpp>
@@ -19,7 +29,7 @@ namespace
     struct open_close {};
 
     // A "complicated" event type that carries some data.
-	enum DiskTypeEnum
+    enum DiskTypeEnum
     {
         DISK_CD=0,
         DISK_DVD=1
@@ -163,16 +173,16 @@ namespace
         template <class Event,class FSM>
         void on_entry(Event const&,FSM& fsm) 
         {
-            fsm.get_state<player_::Stopped&>().entry_counter=0;
-            fsm.get_state<player_::Stopped&>().exit_counter=0;
-            fsm.get_state<player_::Open&>().entry_counter=0;
-            fsm.get_state<player_::Open&>().exit_counter=0;
-            fsm.get_state<player_::Empty&>().entry_counter=0;
-            fsm.get_state<player_::Empty&>().exit_counter=0;
-            fsm.get_state<player_::Playing&>().entry_counter=0;
-            fsm.get_state<player_::Playing&>().exit_counter=0;
-            fsm.get_state<player_::Paused&>().entry_counter=0;
-            fsm.get_state<player_::Paused&>().exit_counter=0;
+            fsm.template get_state<player_::Stopped&>().entry_counter=0;
+            fsm.template get_state<player_::Stopped&>().exit_counter=0;
+            fsm.template get_state<player_::Open&>().entry_counter=0;
+            fsm.template get_state<player_::Open&>().exit_counter=0;
+            fsm.template get_state<player_::Empty&>().entry_counter=0;
+            fsm.template get_state<player_::Empty&>().exit_counter=0;
+            fsm.template get_state<player_::Playing&>().entry_counter=0;
+            fsm.template get_state<player_::Playing&>().exit_counter=0;
+            fsm.template get_state<player_::Paused&>().entry_counter=0;
+            fsm.template get_state<player_::Paused&>().exit_counter=0;
             fsm.context_ = 20;
         }
 

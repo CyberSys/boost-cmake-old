@@ -143,9 +143,8 @@ struct iteration_context
     typedef IteratorT iterator_type;
     typedef typename IteratorT::token_type::position_type position_type;
 
-    typedef iteration_context<ContextT, IteratorT, InputPolicyT> self_type;
-
     typedef base_iteration_context<ContextT, IteratorT> base_type;
+    typedef iteration_context<ContextT, IteratorT, InputPolicyT> self_type;
 
     iteration_context(ContextT& ctx, BOOST_WAVE_STRINGTYPE const &fname, 
             position_type const &act_pos, 

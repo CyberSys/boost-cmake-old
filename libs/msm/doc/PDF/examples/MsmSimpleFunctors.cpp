@@ -1,3 +1,13 @@
+// Copyright 2010 Christophe Henry
+// henry UNDERSCORE christophe AT hotmail DOT com
+// This is an extended version of the state machine available in the boost::mpl library
+// Distributed under the same license as the original.
+// Copyright for the original version:
+// Copyright 2005 David Abrahams and Aleksey Gurtovoy. Distributed
+// under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at
+// http://www.boost.org/LICENSE_1_0.txt)
+
 #include <boost/msm/back/state_machine.hpp>
 #include <boost/msm/front/state_machine_def.hpp>
 #include <boost/msm/front/functor_row.hpp>
@@ -40,7 +50,7 @@ namespace test_fsm // Concrete FSM implementation
             void on_exit(Event const&,FSM& ) {/*std::cout << "leaving: Empty" << std::endl;*/}
         };
         struct Open : public msm::front::state<> 
-        {	 
+        { 
             template <class Event,class FSM>
             void on_entry(Event const&,FSM& ) {/*std::cout << "entering: Open" << std::endl;*/}
             template <class Event,class FSM>
@@ -48,7 +58,7 @@ namespace test_fsm // Concrete FSM implementation
         };
 
         struct Stopped : public msm::front::state<> 
-        {	 
+        { 
             // when stopped, the CD is loaded
             template <class Event,class FSM>
             void on_entry(Event const&,FSM& ) {/*std::cout << "entering: Stopped" << std::endl;*/}
@@ -143,7 +153,7 @@ namespace test_fsm // Concrete FSM implementation
 
         // Transition table for player
         struct transition_table : mpl::vector<
-            //    Start     Event         Next      Action				Guard
+            //    Start     Event         Next      Action                 Guard
             //    +---------+-------------+---------+---------------------+----------------------+
               Row < Stopped , play        , Playing , start_playback                            >,
               Row < Stopped , open_close  , Open    , open_drawer                               >,

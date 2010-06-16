@@ -1,3 +1,13 @@
+// Copyright 2010 Christophe Henry
+// henry UNDERSCORE christophe AT hotmail DOT com
+// This is an extended version of the state machine available in the boost::mpl library
+// Distributed under the same license as the original.
+// Copyright for the original version:
+// Copyright 2005 David Abrahams and Aleksey Gurtovoy. Distributed
+// under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at
+// http://www.boost.org/LICENSE_1_0.txt)
+
 #include <iostream>
 // back-end
 #include <boost/msm/back/state_machine.hpp>
@@ -70,8 +80,8 @@ namespace
             int exit_counter;
         };
         struct Open : public msm::front::state<> 
-        {	 
-            typedef mpl::vector1<CDLoaded>		flag_list;
+        { 
+            typedef mpl::vector1<CDLoaded>      flag_list;
             
             template <class Event,class FSM>
             void on_entry(Event const&,FSM& ) {++entry_counter;}
@@ -82,8 +92,8 @@ namespace
         };
 
         struct Stopped : public msm::front::state<> 
-        {	 
-            typedef mpl::vector1<CDLoaded>		flag_list;
+        { 
+            typedef mpl::vector1<CDLoaded>      flag_list;
 
             template <class Event,class FSM>
             void on_entry(Event const&,FSM& ) {++entry_counter;}
@@ -99,7 +109,7 @@ namespace
         struct Playing_ : public msm::front::state_machine_def<Playing_>
         {
             // when playing, the CD is loaded and we are in either pause or playing (duh)
-            typedef mpl::vector2<PlayingPaused,CDLoaded>		flag_list;
+            typedef mpl::vector2<PlayingPaused,CDLoaded>        flag_list;
 
             template <class Event,class FSM>
             void on_entry(Event const&,FSM& ) {++entry_counter;}
@@ -118,7 +128,7 @@ namespace
             // The list of FSM states
             struct Song1 : public msm::front::state<>
             {
-                typedef mpl::vector1<FirstSongPlaying>		flag_list;
+                typedef mpl::vector1<FirstSongPlaying>      flag_list;
 
                 template <class Event,class FSM>
                 void on_entry(Event const&,FSM& ) {++entry_counter;}
@@ -128,7 +138,7 @@ namespace
                 int exit_counter;
             };
             struct Song2 : public msm::front::state<>
-            {	 
+            { 
                 template <class Event,class FSM>
                 void on_entry(Event const&,FSM& ) {++entry_counter;}
                 template <class Event,class FSM>
@@ -137,7 +147,7 @@ namespace
                 int exit_counter;
             };
             struct Song3 : public msm::front::state<>
-            {	 
+            { 
                 template <class Event,class FSM>
                 void on_entry(Event const&,FSM& ) {++entry_counter;}
                 template <class Event,class FSM>
@@ -156,7 +166,7 @@ namespace
             typedef Playing_ pl; // makes transition table cleaner
             // Transition table for Playing
             struct transition_table : mpl::vector4<
-                //      Start     Event         Next      Action				Guard
+                //      Start     Event         Next      Action               Guard
                 //    +---------+-------------+---------+---------------------+----------------------+
                  _row < Song1   , NextSong    , Song2                                                >,
                   row < Song2   , PreviousSong, Song1   , &pl::start_prev_song,&pl::start_prev_song_guard>,
@@ -177,7 +187,7 @@ namespace
         // state not defining any entry or exit
         struct Paused : public msm::front::state<>
         {
-            typedef mpl::vector2<PlayingPaused,CDLoaded>		flag_list;
+            typedef mpl::vector2<PlayingPaused,CDLoaded>        flag_list;
 
             template <class Event,class FSM>
             void on_entry(Event const&,FSM& ) {++entry_counter;}
@@ -227,9 +237,9 @@ namespace
         void pause_playback(pause const&)      {  }
         void resume_playback(end_pause const&)      {  }
         void stop_and_open(open_close const&)  {  }
-        void stopped_again(stop const&)	{}
+        void stopped_again(stop const&){}
         void report_error(error_found const&) {++report_error_counter;}
-        void report_end_error(end_error const&) {report_end_error_counter;}
+        void report_end_error(end_error const&) {++report_end_error_counter;}
 
         //guards
         bool can_close_drawer(open_close const&)   
@@ -241,18 +251,18 @@ namespace
 
         // Transition table for player
         struct transition_table : mpl::vector<
-            //      Start     Event         Next      Action				Guard
+            //      Start     Event         Next      Action               Guard
             //    +---------+-------------+---------+---------------------+----------------------+
             a_row < Stopped , play        , Playing , &p::start_playback                         >,
             a_row < Stopped , open_close  , Open    , &p::open_drawer                            >,
              _row < Stopped , stop        , Stopped                                              >,
             //  +---------+-------------+---------+---------------------+----------------------+
             g_row < Open    , open_close  , Empty   ,                     &p::can_close_drawer   >,
-			Row   < Open    , play        , none    , Defer             , none                   >,
+            Row   < Open    , play        , none    , Defer             , none                   >,
             //  +---------+-------------+---------+---------------------+----------------------+
             a_row < Empty   , open_close  , Open    , &p::open_drawer                            >,
             a_row < Empty   , cd_detected , Stopped , &p::store_cd_info                          >,
-			Row   < Empty   , play        , none    , Defer             , none                   >,
+            Row   < Empty   , play        , none    , Defer             , none                   >,
             //  +---------+-------------+---------+---------------------+----------------------+
             a_row < Playing , stop        , Stopped , &p::stop_playback                          >,
             a_row < Playing , pause       , Paused  , &p::pause_playback                         >,
@@ -278,28 +288,28 @@ namespace
         template <class Event,class FSM>
         void on_entry(Event const&,FSM& fsm) 
         {
-            fsm.get_state<player_::Stopped&>().entry_counter=0;
-            fsm.get_state<player_::Stopped&>().exit_counter=0;
-            fsm.get_state<player_::Open&>().entry_counter=0;
-            fsm.get_state<player_::Open&>().exit_counter=0;
-            fsm.get_state<player_::Empty&>().entry_counter=0;
-            fsm.get_state<player_::Empty&>().exit_counter=0;
-            fsm.get_state<player_::Playing&>().entry_counter=0;
-            fsm.get_state<player_::Playing&>().exit_counter=0;
-            fsm.get_state<player_::Playing&>().get_state<player_::Playing::Song1&>().entry_counter=0;
-            fsm.get_state<player_::Playing&>().get_state<player_::Playing::Song1&>().exit_counter=0;
-            fsm.get_state<player_::Playing&>().get_state<player_::Playing::Song2&>().entry_counter=0;
-            fsm.get_state<player_::Playing&>().get_state<player_::Playing::Song2&>().exit_counter=0;
-            fsm.get_state<player_::Playing&>().get_state<player_::Playing::Song3&>().entry_counter=0;
-            fsm.get_state<player_::Playing&>().get_state<player_::Playing::Song3&>().exit_counter=0;
-            fsm.get_state<player_::Paused&>().entry_counter=0;
-            fsm.get_state<player_::Paused&>().exit_counter=0;
-            fsm.get_state<player_::AllOk&>().entry_counter=0;
-            fsm.get_state<player_::AllOk&>().exit_counter=0;
-            fsm.get_state<player_::ErrorMode&>().entry_counter=0;
-            fsm.get_state<player_::ErrorMode&>().exit_counter=0;
-            fsm.get_state<player_::ErrorTerminate&>().entry_counter=0;
-            fsm.get_state<player_::ErrorTerminate&>().exit_counter=0;
+            fsm.template get_state<player_::Stopped&>().entry_counter=0;
+            fsm.template get_state<player_::Stopped&>().exit_counter=0;
+            fsm.template get_state<player_::Open&>().entry_counter=0;
+            fsm.template get_state<player_::Open&>().exit_counter=0;
+            fsm.template get_state<player_::Empty&>().entry_counter=0;
+            fsm.template get_state<player_::Empty&>().exit_counter=0;
+            fsm.template get_state<player_::Playing&>().entry_counter=0;
+            fsm.template get_state<player_::Playing&>().exit_counter=0;
+            fsm.template get_state<player_::Playing&>().template get_state<player_::Playing::Song1&>().entry_counter=0;
+            fsm.template get_state<player_::Playing&>().template get_state<player_::Playing::Song1&>().exit_counter=0;
+            fsm.template get_state<player_::Playing&>().template get_state<player_::Playing::Song2&>().entry_counter=0;
+            fsm.template get_state<player_::Playing&>().template get_state<player_::Playing::Song2&>().exit_counter=0;
+            fsm.template get_state<player_::Playing&>().template get_state<player_::Playing::Song3&>().entry_counter=0;
+            fsm.template get_state<player_::Playing&>().template get_state<player_::Playing::Song3&>().exit_counter=0;
+            fsm.template get_state<player_::Paused&>().entry_counter=0;
+            fsm.template get_state<player_::Paused&>().exit_counter=0;
+            fsm.template get_state<player_::AllOk&>().entry_counter=0;
+            fsm.template get_state<player_::AllOk&>().exit_counter=0;
+            fsm.template get_state<player_::ErrorMode&>().entry_counter=0;
+            fsm.template get_state<player_::ErrorMode&>().exit_counter=0;
+            fsm.template get_state<player_::ErrorTerminate&>().entry_counter=0;
+            fsm.template get_state<player_::ErrorTerminate&>().exit_counter=0;
         }
     };
     // Pick a back-end

@@ -1,5 +1,12 @@
-// MsmSimple.cpp : Defines the entry point for the console application.
-//
+// Copyright 2010 Christophe Henry
+// henry UNDERSCORE christophe AT hotmail DOT com
+// This is an extended version of the state machine available in the boost::mpl library
+// Distributed under the same license as the original.
+// Copyright for the original version:
+// Copyright 2005 David Abrahams and Aleksey Gurtovoy. Distributed
+// under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at
+// http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/msm/back/state_machine.hpp>
 #include <boost/msm/front/state_machine_def.hpp>
@@ -44,7 +51,7 @@ namespace test_fsm // Concrete FSM implementation
             void on_exit(Event const&,FSM& ) {/*std::cout << "leaving: Empty" << std::endl;*/}
         };
         struct Open : public msm::front::state<> 
-        {	 
+        { 
             template <class Event,class FSM>
             void on_entry(Event const&,FSM& ) {/*std::cout << "entering: Open" << std::endl;*/}
             template <class Event,class FSM>
@@ -52,7 +59,7 @@ namespace test_fsm // Concrete FSM implementation
         };
 
         struct Stopped : public msm::front::state<> 
-        {	 
+        { 
             // when stopped, the CD is loaded
             template <class Event,class FSM>
             void on_entry(Event const&,FSM& ) {/*std::cout << "entering: Stopped" << std::endl;*/}
@@ -80,7 +87,7 @@ namespace test_fsm // Concrete FSM implementation
             typedef Playing_ pl; // makes transition table cleaner
             // Transition table for Playing
             struct transition_table : mpl::vector4<
-                //    Start     Event         Next      Action				Guard
+                //    Start     Event         Next      Action                 Guard
                 //    +---------+-------------+---------+---------------------+----------------------+
                 a_row < Song1   , NextSong    , Song2   , &pl::start_next_song                     >,
                 a_row < Song2   , PreviousSong, Song1   , &pl::start_prev_song                     >,
@@ -119,14 +126,14 @@ namespace test_fsm // Concrete FSM implementation
         void pause_playback(pause const&)      { }
         void resume_playback(end_pause const&)      {  }
         void stop_and_open(open_close const&)  {  }
-        void stopped_again(stop const&)	{}
+        void stopped_again(stop const&){}
         // guard conditions
 
         typedef player_ p; // makes transition table cleaner
 
         // Transition table for player
         struct transition_table : mpl::vector<
-            //    Start     Event         Next      Action				Guard
+            //    Start     Event         Next      Action                 Guard
             //    +---------+-------------+---------+---------------------+----------------------+
             a_row < Stopped , play        , Playing , &p::start_playback                       >,
             a_row < Stopped , open_close  , Open    , &p::open_drawer                          >,

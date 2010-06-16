@@ -1,3 +1,13 @@
+// Copyright 2010 Christophe Henry
+// henry UNDERSCORE christophe AT hotmail DOT com
+// This is an extended version of the state machine available in the boost::mpl library
+// Distributed under the same license as the original.
+// Copyright for the original version:
+// Copyright 2005 David Abrahams and Aleksey Gurtovoy. Distributed
+// under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at
+// http://www.boost.org/LICENSE_1_0.txt)
+
 #include <iostream>
 // back-end
 #include <boost/msm/back/state_machine.hpp>
@@ -55,7 +65,7 @@ namespace
     BOOST_MSM_EUML_INTERRUPT_STATE(( end_error,++state_(entry_counter),++state_(exit_counter),attributes_ << entry_counter << exit_counter),
                                     ErrorMode)
 
-	// Playing is now a state machine itself.
+    // Playing is now a state machine itself.
     BOOST_MSM_EUML_DECLARE_ATTRIBUTE(unsigned int,start_next_song_counter)
     BOOST_MSM_EUML_DECLARE_ATTRIBUTE(unsigned int,start_prev_song_guard_counter)
 
@@ -67,10 +77,10 @@ namespace
     // Playing has a transition table 
    BOOST_MSM_EUML_TRANSITION_TABLE((
         //  +------------------------------------------------------------------------------+
-            Song2         == Song1          + next_song															,
-            Song1         == Song2          + previous_song	  [True_()] / ++fsm_(start_prev_song_guard_counter)	,
-            Song3         == Song2          + next_song       / ++fsm_(start_next_song_counter)					,
-            Song2         == Song3          + previous_song	  [True_()] / ++fsm_(start_prev_song_guard_counter)	
+            Song2         == Song1          + next_song                                                         ,
+            Song1         == Song2          + previous_song   [True_()] / ++fsm_(start_prev_song_guard_counter) ,
+            Song3         == Song2          + next_song       / ++fsm_(start_next_song_counter)                 ,
+            Song2         == Song3          + previous_song   [True_()] / ++fsm_(start_prev_song_guard_counter)
         //  +------------------------------------------------------------------------------+
         ),playing_transition_table )
 
@@ -79,8 +89,8 @@ namespace
                                         ++state_(entry_counter), // Entry
                                         ++state_(exit_counter), // Exit
                                         attributes_ << entry_counter << exit_counter 
-													<< start_next_song_counter
-													<< start_prev_song_guard_counter, // Attributes
+                                                    << start_next_song_counter
+                                                    << start_prev_song_guard_counter, // Attributes
                                         configure_<< PlayingPaused << CDLoaded //flags
                                         ),Playing_)
 

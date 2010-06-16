@@ -1,3 +1,13 @@
+// Copyright 2010 Christophe Henry
+// henry UNDERSCORE christophe AT hotmail DOT com
+// This is an extended version of the state machine available in the boost::mpl library
+// Distributed under the same license as the original.
+// Copyright for the original version:
+// Copyright 2005 David Abrahams and Aleksey Gurtovoy. Distributed
+// under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at
+// http://www.boost.org/LICENSE_1_0.txt)
+
 #include <set>
 #include <string>
 #include <iostream>
@@ -123,7 +133,7 @@ namespace  // Concrete FSM implementation
 
         // Transition table for player
         struct transition_table : mpl::vector4<
-            //     Start       Event              Next         Action				Guard
+            //     Start       Event              Next         Action                Guard
             //    +-----------+------------------+------------+---------------------+----------------------+
             _row < MyForeach  , OneSong          , MyFind                                                  >,
             _row < MyFind     , NotFound<string> , MyForeach                                               >,

@@ -1,3 +1,13 @@
+// Copyright 2010 Christophe Henry
+// henry UNDERSCORE christophe AT hotmail DOT com
+// This is an extended version of the state machine available in the boost::mpl library
+// Distributed under the same license as the original.
+// Copyright for the original version:
+// Copyright 2005 David Abrahams and Aleksey Gurtovoy. Distributed
+// under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at
+// http://www.boost.org/LICENSE_1_0.txt)
+
 #include <iostream>
 // back-end
 #include <boost/msm/back/state_machine.hpp>
@@ -17,7 +27,7 @@ namespace
     struct open_close {};
 
     // A "complicated" event type that carries some data.
-	enum DiskTypeEnum
+    enum DiskTypeEnum
     {
         DISK_CD=0,
         DISK_DVD=1
@@ -46,7 +56,7 @@ namespace
             void on_exit(Event const&,FSM& ) {std::cout << "leaving: Empty" << std::endl;}
         };
         struct Open : public msm::front::state<> 
-        {	 
+        { 
             template <class Event,class FSM>
             void on_entry(Event const& ,FSM&) {std::cout << "entering: Open" << std::endl;}
             template <class Event,class FSM>
@@ -55,7 +65,7 @@ namespace
 
         // sm_ptr still supported but deprecated as functors are a much better way to do the same thing
         struct Stopped : public msm::front::state<msm::front::default_base_state,msm::front::sm_ptr> 
-        {	 
+        { 
             template <class Event,class FSM>
             void on_entry(Event const& ,FSM&) {std::cout << "entering: Stopped" << std::endl;}
             template <class Event,class FSM>
@@ -92,7 +102,7 @@ namespace
         void pause_playback(pause const&)      { std::cout << "player::pause_playback\n"; }
         void resume_playback(end_pause const&)      { std::cout << "player::resume_playback\n"; }
         void stop_and_open(open_close const&)  { std::cout << "player::stop_and_open\n"; }
-        void stopped_again(stop const&)	{std::cout << "player::stopped_again\n";}
+        void stopped_again(stop const&){std::cout << "player::stopped_again\n";}
         // guard conditions
         bool good_disk_format(cd_detected const& evt)
         {
@@ -115,7 +125,7 @@ namespace
 
         // Transition table for player
         struct transition_table : mpl::vector<
-            //    Start     Event         Next      Action				 Guard
+            //    Start     Event         Next      Action               Guard
             //  +---------+-------------+---------+---------------------+----------------------+
           a_row < Stopped , play        , Playing , &p::start_playback                         >,
           a_row < Stopped , open_close  , Open    , &p::open_drawer                            >,
@@ -158,7 +168,7 @@ namespace
 
     void test()
     {        
-		player p;
+        player p;
         // needed to start the highest-level SM. This will call on_entry and mark the start of the SM
         p.start(); 
         // go to Open, call on_exit on Empty, then action, then on_entry on Open
@@ -169,7 +179,7 @@ namespace
             cd_detected("louie, louie",DISK_DVD)); pstate(p);
         p.process_event(
             cd_detected("louie, louie",DISK_CD)); pstate(p);
-		p.process_event(play());
+        p.process_event(play());
 
         // at this point, Play is active      
         p.process_event(pause()); pstate(p);

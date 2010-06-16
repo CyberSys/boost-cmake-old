@@ -1,3 +1,13 @@
+// Copyright 2010 Christophe Henry
+// henry UNDERSCORE christophe AT hotmail DOT com
+// This is an extended version of the state machine available in the boost::mpl library
+// Distributed under the same license as the original.
+// Copyright for the original version:
+// Copyright 2005 David Abrahams and Aleksey Gurtovoy. Distributed
+// under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at
+// http://www.boost.org/LICENSE_1_0.txt)
+
 #include <boost/statechart/event.hpp>
 #include <boost/statechart/state_machine.hpp>
 #include <boost/statechart/simple_state.hpp>
@@ -40,7 +50,7 @@ namespace test_sc
         void store_cd_info(cd_detected const& cd)   {/*std::cout << "player::store_cd_info\n";*/ }
         void close_drawer(open_close const&)        { /*std::cout << "player::close_drawer\n";*/ }
         void start_playback(play const&)            { /*std::cout << "player::start_playback\n";*/ }
-        void stopped_again(stop const&)	            {/*std::cout << "player::stopped_again\n";*/}
+        void stopped_again(stop const&)             {/*std::cout << "player::stopped_again\n";*/}
         void stop_playback(stop const&)             { /*std::cout << "player::stop_playback\n";*/ }
         void pause_playback(pause const&)           { /*std::cout << "player::pause_playback\n"; */}
         void stop_and_open(open_close const&)       { /*std::cout << "player::stop_and_open\n";*/ }

@@ -140,6 +140,8 @@ namespace boost
                 {
                     lock.lock();
                 }
+            private:
+                relocker& operator=(relocker const&);
             };
 
             void do_callback(boost::unique_lock<boost::mutex>& lock)

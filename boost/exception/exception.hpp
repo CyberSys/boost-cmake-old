@@ -134,7 +134,7 @@ boost
 
     class exception;
 
-    template <class>
+    template <class T>
     class shared_ptr;
 
     namespace
@@ -219,7 +219,8 @@ boost
 #endif
             ;
 
-#if (defined(__MWERKS__) && __MWERKS__<=0x3207) || (defined(_MSC_VER) && _MSC_VER<=1310)
+#if (defined(__MWERKS__) && __MWERKS__<=0x3207) || (defined(_MSC_VER) && _MSC_VER<=1310) || \
+  defined(__BORLANDC__)  // Tested at Embarcadero/CodeGear C++ version 6.21.
         public:
 #else
         private:

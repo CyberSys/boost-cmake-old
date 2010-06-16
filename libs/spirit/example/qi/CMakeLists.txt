@@ -26,7 +26,7 @@ foreach(
     calc4
     calc5
     calc4_debug
-    reference
+    # reference
     # boost_array
     roman
     nabialek

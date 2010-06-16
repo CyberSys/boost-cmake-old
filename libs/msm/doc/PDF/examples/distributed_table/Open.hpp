@@ -1,3 +1,13 @@
+// Copyright 2010 Christophe Henry
+// henry UNDERSCORE christophe AT hotmail DOT com
+// This is an extended version of the state machine available in the boost::mpl library
+// Distributed under the same license as the original.
+// Copyright for the original version:
+// Copyright 2005 David Abrahams and Aleksey Gurtovoy. Distributed
+// under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at
+// http://www.boost.org/LICENSE_1_0.txt)
+
 #ifndef OPEN_HPP
 #define OPEN_HPP
 
@@ -16,7 +26,7 @@ namespace mpl = boost::mpl;
 using namespace msm::front;
 
 struct Open : public msm::front::state<> 
-{	 
+{ 
     template <class Event,class FSM>
     void on_entry(Event const& ,FSM&) {std::cout << "entering: Open" << std::endl;}
     template <class Event,class FSM>
@@ -24,7 +34,7 @@ struct Open : public msm::front::state<>
     void close_drawer(open_close const&);
 
     struct internal_transition_table : mpl::vector<
-        //               Start     Event         Next      Action				       Guard
+        //               Start     Event         Next      Action                      Guard
         //+-------------+---------+-------------+---------+---------------------------+----------------------+
     msm::front::a_row2  < Open    , open_close  , Empty   , Open,&Open::close_drawer                         >
         //+-------------+---------+-------------+---------+---------------------------+----------------------+

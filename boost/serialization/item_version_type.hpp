@@ -7,7 +7,7 @@
 // http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/cstdint.hpp> // uint_least8_t
-#include <boost/operators.hpp>
+#include <boost/integer_traits.hpp>
 #include <boost/serialization/level.hpp>
 #include <boost/serialization/is_bitwise_serializable.hpp>
 
@@ -19,26 +19,29 @@ namespace serialization {
 #pragma warning( disable : 4244 4267 )
 #endif
 
-struct item_version_type
-    : boost::totally_ordered1< item_version_type
-    , boost::totally_ordered2< item_version_type, uint_least8_t                             
-    > >                                                         
-{                                                               
+class item_version_type {
+public:
     typedef uint_least8_t base_type;
+private:
     base_type t;
-    item_version_type(){};
-    item_version_type(const item_version_type & t_) : t(t_.t){}
-    explicit item_version_type(const unsigned int & t_) : t(t_){
+    item_version_type(): t(0) {};
+public:
+    explicit item_version_type(const unsigned int t_) : t(t_){
         assert(t_ <= boost::integer_traits<base_type>::const_max);
     }
-    item_version_type & operator=(const item_version_type & rhs){
+    item_version_type(const item_version_type & t_) : 
+        t(t_.t)
+    {}
+    item_version_type & operator=(item_version_type rhs){
         t = rhs.t; 
         return *this;
     }
+    // used for text output
     operator const base_type () const {
         return t;
     }                
-    operator base_type & (){
+    // used for text output
+    operator base_type & () {
         return t;
     }
     bool operator==(const item_version_type & rhs) const {
@@ -46,7 +49,7 @@ struct item_version_type
     } 
     bool operator<(const item_version_type & rhs) const {
         return t < rhs.t;
-    }   
+    }
 };
 
 #if defined(_MSC_VER)

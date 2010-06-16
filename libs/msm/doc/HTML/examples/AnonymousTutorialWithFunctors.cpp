@@ -1,3 +1,13 @@
+// Copyright 2010 Christophe Henry
+// henry UNDERSCORE christophe AT hotmail DOT com
+// This is an extended version of the state machine available in the boost::mpl library
+// Distributed under the same license as the original.
+// Copyright for the original version:
+// Copyright 2005 David Abrahams and Aleksey Gurtovoy. Distributed
+// under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at
+// http://www.boost.org/LICENSE_1_0.txt)
+
 #include <iostream>
 // back-end
 #include <boost/msm/back/state_machine.hpp>
@@ -30,7 +40,7 @@ namespace
             void on_exit(Event const&,FSM& ) {std::cout << "leaving: State1" << std::endl;}
         };
         struct State2 : public msm::front::state<> 
-        {	 
+        { 
             template <class Event,class FSM>
             void on_entry(Event const& ,FSM&) {std::cout << "entering: State2" << std::endl;}
             template <class Event,class FSM>
@@ -38,7 +48,7 @@ namespace
         };
 
         struct State3 : public msm::front::state<> 
-        {	 
+        { 
             // when stopped, the CD is loaded
             template <class Event,class FSM>
             void on_entry(Event const& ,FSM&) {std::cout << "entering: State3" << std::endl;}
@@ -98,7 +108,7 @@ namespace
 
         // Transition table for player
         struct transition_table : mpl::vector<
-            //    Start     Event         Next      Action				 Guard
+            //    Start     Event         Next      Action               Guard
             //  +---------+-------------+---------+---------------------+----------------------+
             Row < State1  , none        , State2                                               >,
             Row < State2  , none        , State3  , State2ToState3                             >,
@@ -130,7 +140,7 @@ namespace
 
     void test()
     {        
-		my_machine p;
+        my_machine p;
 
         // needed to start the highest-level SM. This will call on_entry and mark the start of the SM
         // in this case it will also immediately trigger all anonymous transitions

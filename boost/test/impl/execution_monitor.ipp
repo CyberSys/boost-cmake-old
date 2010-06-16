@@ -96,7 +96,10 @@ typedef void* uintptr_t;
 #    define BOOST_TEST_CRT_SET_HOOK(H)  (void*)(H)
 #  endif
 
-#  if !BOOST_WORKAROUND(_MSC_VER,  >= 1400 ) || defined(UNDER_CE)
+// como always sets _MSC_VER to 1310, regardless of the
+// actual underlying msvc version.
+#  if (!BOOST_WORKAROUND(_MSC_VER,  >= 1400 ) && \
+      !defined(__COMO__)) || defined(UNDER_CE)
 
 typedef void* _invalid_parameter_handler;
 
@@ -123,6 +126,8 @@ namespace { void _set_se_translator( void* ) {} }
 #  include <setjmp.h>
 
 #  if defined(__FreeBSD__)  
+
+#    include <osreldate.h>
 
 #    ifndef SIGPOLL
 #      define SIGPOLL SIGIO
@@ -564,8 +569,8 @@ system_signal_exception::report() const
 
 // Forward declaration
 extern "C" {
-static void execution_monitor_jumping_signal_handler( int sig, siginfo_t* info, void* context );
-static void execution_monitor_attaching_signal_handler( int sig, siginfo_t* info, void* context );
+static void boost_execution_monitor_jumping_signal_handler( int sig, siginfo_t* info, void* context );
+static void boost_execution_monitor_attaching_signal_handler( int sig, siginfo_t* info, void* context );
 }
 
 class signal_action {
@@ -609,8 +614,8 @@ signal_action::signal_action( int sig, bool install, bool attach_dbg, char* alt_
     }
 
     m_new_action.sa_flags     |= SA_SIGINFO;
-    m_new_action.sa_sigaction  = attach_dbg ? &execution_monitor_attaching_signal_handler
-                                            : &execution_monitor_jumping_signal_handler;
+    m_new_action.sa_sigaction  = attach_dbg ? &boost_execution_monitor_attaching_signal_handler
+                                            : &boost_execution_monitor_jumping_signal_handler;
     BOOST_TEST_SYS_ASSERT( sigemptyset( &m_new_action.sa_mask ) != -1 );
 
 #ifdef BOOST_TEST_USE_ALT_STACK
@@ -757,7 +762,7 @@ signal_handler::~signal_handler()
 
 extern "C" {
 
-static void execution_monitor_jumping_signal_handler( int sig, siginfo_t* info, void* context )
+static void boost_execution_monitor_jumping_signal_handler( int sig, siginfo_t* info, void* context )
 {
     signal_handler::sys_sig()( info, context );
 
@@ -766,10 +771,10 @@ static void execution_monitor_jumping_signal_handler( int sig, siginfo_t* info, 
 
 //____________________________________________________________________________//
 
-static void execution_monitor_attaching_signal_handler( int sig, siginfo_t* info, void* context )
+static void boost_execution_monitor_attaching_signal_handler( int sig, siginfo_t* info, void* context )
 {
     if( !debug::attach_debugger( false ) )
-        execution_monitor_jumping_signal_handler( sig, info, context );
+        boost_execution_monitor_jumping_signal_handler( sig, info, context );
 
     // debugger attached; it will handle the signal
     BOOST_TEST_SYS_ASSERT( ::signal( sig, SIG_DFL ) != SIG_ERR );
