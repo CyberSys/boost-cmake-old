@@ -31,7 +31,7 @@ namespace {
         {
         case DLL_THREAD_DETACH:
         {
-            boost::on_thread_exit();
+            on_thread_exit();
             break;
         }
         }
@@ -40,9 +40,9 @@ namespace {
 
 extern "C" {
 
-    void (* after_ctors )() __attribute__((section(".ctors")))     = boost::on_process_enter;
-    void (* before_dtors)() __attribute__((section(".dtors")))     = boost::on_thread_exit;
-    void (* after_dtors )() __attribute__((section(".dtors.zzz"))) = boost::on_process_exit;
+    void (* after_ctors )() __attribute__((section(".ctors")))     = on_process_enter;
+    void (* before_dtors)() __attribute__((section(".dtors")))     = on_thread_exit;
+    void (* after_dtors )() __attribute__((section(".dtors.zzz"))) = on_process_exit;
 
     ULONG __tls_index__ = 0;
     char __tls_end__ __attribute__((section(".tls$zzz"))) = 0;
@@ -209,18 +209,18 @@ extern "C" const IMAGE_TLS_DIRECTORY32 _tls_used __attribute__ ((section(".rdata
             //for destructors of global objects, so that
             //shouldn't be a problem.
 
-            atexit(boost::on_thread_exit);
+            atexit(on_thread_exit);
 
             //Call Boost process entry callback here
 
-            boost::on_process_enter();
+            on_process_enter();
 
             return INIRETSUCCESS;
         }
 
         PVAPI on_process_term()
         {
-            boost::on_process_exit();
+            on_process_exit();
             return INIRETSUCCESS;
         }
 
@@ -229,7 +229,7 @@ extern "C" const IMAGE_TLS_DIRECTORY32 _tls_used __attribute__ ((section(".rdata
             switch (dwReason)
             {
             case DLL_THREAD_DETACH:
-                boost::on_thread_exit();
+                on_thread_exit();
                 break;
             }
         }
@@ -239,10 +239,10 @@ extern "C" const IMAGE_TLS_DIRECTORY32 _tls_used __attribute__ ((section(".rdata
             switch (dwReason)
             {
             case DLL_THREAD_DETACH:
-                boost::on_thread_exit();
+                on_thread_exit();
                 break;
             case DLL_PROCESS_DETACH:
-                boost::on_process_exit();
+                on_process_exit();
                 break;
             }
             return true;
