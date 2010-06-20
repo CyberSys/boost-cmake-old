@@ -1,4 +1,4 @@
-/* test_binomial.cpp
+/* test_poisson.cpp
  *
  * Copyright Steven Watanabe 2010
  * Distributed under the Boost Software License, Version 1.0. (See
@@ -9,11 +9,10 @@
  *
  */
 
-#include <boost/random/binomial_distribution.hpp>
-#include <boost/random/uniform_int.hpp>
-#include <boost/random/uniform_01.hpp>
+#include <boost/random/poisson_distribution.hpp>
+#include <boost/random/uniform_real.hpp>
 #include <boost/random/mersenne_twister.hpp>
-#include <boost/math/distributions/binomial.hpp>
+#include <boost/math/distributions/poisson.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/exception/diagnostic_information.hpp>
 #include <vector>
@@ -22,22 +21,24 @@
 
 #include "chi_squared_test.hpp"
 
-bool do_test(int n, double p, long long max) {
-    std::cout << "running binomial(" << n << ", " << p << ")" << " " << max << " times: " << std::flush;
+bool do_test(double mean, long long max) {
+    std::cout << "running poisson(" << mean << ")" << " " << max << " times: " << std::flush;
 
-    std::vector<double> expected(n+1);
+    int max_value = static_cast<int>(mean * 4);
+    std::vector<double> expected(max_value+1);
     {
-        boost::math::binomial dist(n, p);
-        for(int i = 0; i <= n; ++i) {
+        boost::math::poisson dist(mean);
+        for(int i = 0; i <= max_value; ++i) {
             expected[i] = pdf(dist, i);
         }
+        expected.back() += 1 - cdf(dist, max_value);
     }
     
-    boost::random::binomial_distribution<int, double> dist(n, p);
+    boost::random::poisson_distribution<int, double> dist(mean);
     boost::mt19937 gen;
-    std::vector<long long> results(n + 1);
+    std::vector<long long> results(max_value + 1);
     for(long long i = 0; i < max; ++i) {
-        ++results[dist(gen)];
+        ++results[std::min(dist(gen), max_value)];
     }
 
     long long sum = std::accumulate(results.begin(), results.end(), 0ll);
@@ -56,13 +57,12 @@ bool do_test(int n, double p, long long max) {
     return result;
 }
 
-bool do_tests(int repeat, int max_n, long long trials) {
+bool do_tests(int repeat, double max_mean, long long trials) {
     boost::mt19937 gen;
-    boost::uniform_int<> idist(0, max_n);
-    boost::uniform_01<> rdist;
+    boost::uniform_real<> rdist(1e-15, max_mean);
     int errors = 0;
     for(int i = 0; i < repeat; ++i) {
-        if(!do_test(idist(gen), rdist(gen), trials)) {
+        if(!do_test(rdist(gen), trials)) {
             ++errors;
         }
     }
@@ -73,7 +73,7 @@ bool do_tests(int repeat, int max_n, long long trials) {
 }
 
 int usage() {
-    std::cerr << "Usage: test_binomial_distribution -r <repeat> -n <max n> -t <trials>" << std::endl;
+    std::cerr << "Usage: test_poisson -r <repeat> -m <max mean> -t <trials>" << std::endl;
     return 2;
 }
 
@@ -91,7 +91,7 @@ bool handle_option(int& argc, char**& argv, char opt, T& value) {
 
 int main(int argc, char** argv) {
     int repeat = 10;
-    int max_n = 100000;
+    double max_mean = 100000;
     long long trials = 1000000ll;
 
     if(argc > 0) {
@@ -101,7 +101,7 @@ int main(int argc, char** argv) {
     while(argc > 0) {
         if(argv[0][0] != '-') return usage();
         else if(!handle_option(argc, argv, 'r', repeat)
-             && !handle_option(argc, argv, 'n', max_n)
+             && !handle_option(argc, argv, 'm', max_mean)
              && !handle_option(argc, argv, 't', trials)) {
             return usage();
         }
@@ -110,7 +110,7 @@ int main(int argc, char** argv) {
     }
 
     try {
-        if(do_tests(repeat, max_n, trials)) {
+        if(do_tests(repeat, max_mean, trials)) {
             return 0;
         } else {
             return EXIT_FAILURE;
