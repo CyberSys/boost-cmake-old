@@ -24,7 +24,12 @@
 #include <boost/config/warning_disable.hpp>
 
 //  See deprecated_test for tests of deprecated features
-#define BOOST_FILESYSTEM_NO_DEPRECATED
+#ifndef BOOST_FILESYSTEM_NO_DEPRECATED 
+# define BOOST_FILESYSTEM_NO_DEPRECATED
+#endif
+#ifndef BOOST_SYSTEM_NO_DEPRECATED 
+# define BOOST_SYSTEM_NO_DEPRECATED
+#endif
 
 #include <boost/filesystem/path.hpp>
 #include <boost/filesystem/detail/utf8_codecvt_facet.hpp>  // for imbue tests
@@ -398,6 +403,16 @@ namespace
     ss << p1;
     ss >> p2;
     CHECK(p1 == p2);
+
+    path wp1(L"foo bar");
+    path wp2;
+
+    std::wstringstream wss;
+
+    CHECK(wp1 != wp2);
+    wss << wp1;
+    wss >> wp2;
+    CHECK(wp1 == wp2);
   }
 
   //  test_other_non_members  ----------------------------------------------------------//

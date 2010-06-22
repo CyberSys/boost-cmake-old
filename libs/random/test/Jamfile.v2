@@ -25,6 +25,7 @@ local all-urngs =
     hellekalek1995
     mt11213b
     mt19937
+    mt19937_64
     lagged_fibonacci
     lagged_fibonacci607
     ranlux3
@@ -41,10 +42,14 @@ for urng in $(all-urngs)
     run instantiate.cpp : : : <define>BOOST_RANDOM_URNG_TEST=$(urng) : test_$(urng) ;
 }
 
+run test_seed_seq.cpp /boost//unit_test_framework ;
+
 run test_binomial.cpp ;
 run test_binomial_distribution.cpp /boost//unit_test_framework ;
 run test_poisson.cpp ;
 run test_poisson_distribution.cpp /boost//unit_test_framework ;
+run test_discrete.cpp ;
+run test_discrete_distribution.cpp /boost//unit_test_framework ;
 
 # run nondet_random_speed.cpp ;
 # run random_device.cpp ;

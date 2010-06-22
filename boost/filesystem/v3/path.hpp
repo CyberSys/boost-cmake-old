@@ -21,11 +21,12 @@
 #include <boost/system/system_error.hpp>
 #include <boost/iterator/iterator_facade.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/io/detail/quoted_manip.hpp>
 #include <boost/static_assert.hpp>
 #include <string>
 #include <iterator>
 #include <cstring>
-#include <iosfwd>    // needed by basic_path inserter and extractor
+#include <iosfwd>
 #include <stdexcept>
 #include <cassert>
 #include <locale>
@@ -542,36 +543,31 @@ namespace filesystem3
   inline path operator/(const path& lhs, const path& rhs)  { return path(lhs) /= rhs; }
 
   //  inserters and extractors
+  //    use boost::io::quoted() to handle spaces in paths
+  //    use '&' as escape character to ease use for Windows paths
 
-  inline std::ostream& operator<<(std::ostream & os, const path& p)
+  template <class Char, class Traits>
+  inline std::basic_ostream<Char, Traits>&
+  operator<<(std::basic_ostream<Char, Traits>& os, const path& p)
   {
-    os << p.string();
-    return os;
+    return os
+      << boost::io::quoted(p.string<std::basic_string<Char> >(), static_cast<Char>('&'));
   }
   
-  inline std::wostream& operator<<(std::wostream & os, const path& p)
+  template <class Char, class Traits>
+  inline std::basic_istream<Char, Traits>&
+  operator>>(std::basic_istream<Char, Traits>& is, path& p)
   {
-    os << p.wstring();
-    return os;
-  }
-  
-  inline std::istream& operator>>(std::istream & is, path& p)
-  {
-    std::string str;
-    std::getline(is, str);  // See ticket #3863
+    std::basic_string<Char> str;
+    is >> boost::io::quoted(str, static_cast<Char>('&'));
     p = str;
     return is;
   }
   
-  inline std::wistream& operator>>(std::wistream & is, path& p)
-  {
-    std::wstring str;
-    std::getline(is, str);  // See ticket #3863
-    p = str;
-    return is;
-  }
-
   //  name_checks
+
+  //  These functions are holdovers from version 1. It isn't clear they have much
+  //  usefulness, or how to generalize them for later versions.
 
   BOOST_FILESYSTEM_DECL bool portable_posix_name(const std::string & name);
   BOOST_FILESYSTEM_DECL bool windows_name(const std::string & name);
