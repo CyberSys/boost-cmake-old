@@ -191,7 +191,7 @@ public:
   operator>>(std::basic_istream<CharT,Traits>& is,
              linear_congruential& lcg)
   {
-    typename linear_congruential::result_type x;
+    IntType x;
     if(is >> x) {
       if(x >= (lcg.min)() && x <= (lcg.max)()) {
         lcg._x = x;
