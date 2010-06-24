@@ -1,7 +1,7 @@
 [library Boost.Random
   [quickbook 1.5]
   [authors [Maurer, Jens]]
-  [copyright 2000-2005 Jens Maurer, 2009 Steven Watanabe]
+  [copyright 2000-2005 Jens Maurer, 2009-2010 Steven Watanabe]
   [license
       Distributed under the Boost Software License, Version 1.0.
       (See accompanying file LICENSE_1_0.txt or copy at
@@ -30,15 +30,16 @@
 [def __random_number_generator [classref boost::random_number_generator random_number_generator]]
 [def __variate_generator [classref boost::variate_generator variate_generator]]
 
-[def __minstd_rand0 [classref boost::minstd_rand0 minstd_rand0]]
-[def __minstd_rand [classref boost::minstd_rand minstd_rand]]
-[def __rand48 [classref boost::rand48 rand48]]
+[def __minstd_rand0 [classref boost::random::minstd_rand0 minstd_rand0]]
+[def __minstd_rand [classref boost::random::minstd_rand minstd_rand]]
+[def __rand48 [classref boost::random::rand48 rand48]]
 [def __ecuyer1988 [classref boost::ecuyer1988 ecuyer1988]]
 [def __kreutzer1986 [classref boost::kreutzer1986 kreutzer1986]]
 [def __taus88 [classref boost::taus88 taus88]]
 [def __hellekalek1995 [classref boost::hellekalek1995 hellekalek1995]]
-[def __mt11213b [classref boost::mt11213b mt11213b]]
-[def __mt19937 [classref boost::mt19937 mt19937]]
+[def __mt11213b [classref boost::random::mt11213b mt11213b]]
+[def __mt19937 [classref boost::random::mt19937 mt19937]]
+[def __mt19937_64 [classref boost::random::mt19937_64 mt19937_64]]
 [def __lagged_fibonacci607 [classref boost::lagged_fibonacci607 lagged_fibonacci607]]
 [def __lagged_fibonacci1279 [classref boost::lagged_fibonacci1279 lagged_fibonacci1279]]
 [def __lagged_fibonacci2281 [classref boost::lagged_fibonacci2281 lagged_fibonacci2281]]
@@ -48,14 +49,16 @@
 [def __lagged_fibonacci19937 [classref boost::lagged_fibonacci19937 lagged_fibonacci19937]]
 [def __lagged_fibonacci23209 [classref boost::lagged_fibonacci23209 lagged_fibonacci23209]]
 [def __lagged_fibonacci44497 [classref boost::lagged_fibonacci44497 lagged_fibonacci44497]]
-[def __ranlux3 [classref boost::ranlux3 ranlux3]]
-[def __ranlux4 [classref boost::ranlux4 ranlux4]]
-[def __ranlux64_3 [classref boost::ranlux64_3 ranlux64_3]]
-[def __ranlux64_4 [classref boost::ranlux64_4 ranlux64_4]]
-[def __ranlux3_01 [classref boost::ranlux3_01 ranlux3_01]]
-[def __ranlux4_01 [classref boost::ranlux4_01 ranlux4_01]]
-[def __ranlux64_3_01 [classref boost::ranlux64_3_01 ranlux64_3_01]]
-[def __ranlux64_4_01 [classref boost::ranlux64_4_01 ranlux64_4_01]]
+[def __ranlux3 [classref boost::random::ranlux3 ranlux3]]
+[def __ranlux4 [classref boost::random::ranlux4 ranlux4]]
+[def __ranlux64_3 [classref boost::random::ranlux64_3 ranlux64_3]]
+[def __ranlux64_4 [classref boost::random::ranlux64_4 ranlux64_4]]
+[def __ranlux3_01 [classref boost::random::ranlux3_01 ranlux3_01]]
+[def __ranlux4_01 [classref boost::random::ranlux4_01 ranlux4_01]]
+[def __ranlux64_3_01 [classref boost::random::ranlux64_3_01 ranlux64_3_01]]
+[def __ranlux64_4_01 [classref boost::random::ranlux64_4_01 ranlux64_4_01]]
+[def __ranlux24 [classref boost::random::ranlux24 ranlux24]]
+[def __ranlux48 [classref boost::random::ranlux48 ranlux48]]
 
 [def __uniform_smallint [classref boost::uniform_smallint uniform_smallint]]
 [def __uniform_int [classref boost::uniform_int uniform_int]]
@@ -65,7 +68,7 @@
 [def __binomial_distribution [classref boost::random::binomial_distribution binomial_distribution]]
 [def __cauchy_distribution [classref boost::cauchy_distribution cauchy_distribution]]
 [def __discrete_distribution [classref boost::random::discrete_distribution discrete_distribution]]
-[def __gamma_distribution [classref boost::gamma_distribution gamma_distribution]]
+[def __gamma_distribution [classref boost::random::gamma_distribution gamma_distribution]]
 [def __poisson_distribution [classref boost::random::poisson_distribution poisson_distribution]]
 [def __geometric_distribution [classref boost::geometric_distribution geometric_distribution]]
 [def __triangle_distribution [classref boost::triangle_distribution triangle_distribution]]
@@ -89,11 +92,11 @@ to have a look at [@boost:/libs/random/example/random_demo.cpp random_demo.cpp].
 
 For a very quick start, here's an example:
 
-  ``[classref boost::mt19937]`` rng;                 // produces randomness out of thin air
+  ``[classref boost::random::mt19937]`` rng;         // produces randomness out of thin air
                                       // see pseudo-random number generators
   ``[classref boost::uniform_int]<>`` six(1,6);      // distribution that maps to 1..6
                                       // see random number distributions
-  ``[classref boost::variate_generator]``<``[classref boost::mt19937]``&, ``[classref boost::uniform_int]``<> >
+  ``[classref boost::variate_generator]``<``[classref boost::random::mt19937]``&, ``[classref boost::uniform_int]``<> >
            die(rng, six);             // glues randomness with mapping
   int x = die();                      // simulate rolling a die
 
