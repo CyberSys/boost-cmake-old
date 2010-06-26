@@ -196,15 +196,14 @@ namespace boost
         detach();
     }
 
-    detail::thread_data_ptr thread::get_thread_info() const
+    detail::thread_data_ptr thread::get_thread_info BOOST_PREVENT_MACRO_SUBSTITUTION () const
     {
-        lock_guard<mutex> l(thread_info_mutex);
         return thread_info;
     }
 
     void thread::join()
     {
-        detail::thread_data_ptr const local_thread_info=get_thread_info();
+        detail::thread_data_ptr const local_thread_info=(get_thread_info)();
         if(local_thread_info)
         {
             bool do_join=false;
@@ -238,7 +237,6 @@ namespace boost
                 local_thread_info->done_condition.notify_all();
             }
             
-            lock_guard<mutex> l1(thread_info_mutex);
             if(thread_info==local_thread_info)
             {
                 thread_info.reset();
@@ -248,7 +246,7 @@ namespace boost
 
     bool thread::timed_join(system_time const& wait_until)
     {
-        detail::thread_data_ptr const local_thread_info=get_thread_info();
+        detail::thread_data_ptr const local_thread_info=(get_thread_info)();
         if(local_thread_info)
         {
             bool do_join=false;
@@ -285,7 +283,6 @@ namespace boost
                 local_thread_info->done_condition.notify_all();
             }
             
-            lock_guard<mutex> l1(thread_info_mutex);
             if(thread_info==local_thread_info)
             {
                 thread_info.reset();
@@ -296,17 +293,14 @@ namespace boost
 
     bool thread::joinable() const
     {
-        return get_thread_info();
+        return (get_thread_info)();
     }
 
 
     void thread::detach()
     {
         detail::thread_data_ptr local_thread_info;
-        {
-            lock_guard<mutex> l1(thread_info_mutex);
-            thread_info.swap(local_thread_info);
-        }
+        thread_info.swap(local_thread_info);
         
         if(local_thread_info)
         {
@@ -397,7 +391,7 @@ namespace boost
 
     thread::id thread::get_id() const
     {
-        detail::thread_data_ptr const local_thread_info=get_thread_info();
+        detail::thread_data_ptr const local_thread_info=(get_thread_info)();
         if(local_thread_info)
         {
             return id(local_thread_info);
@@ -410,7 +404,7 @@ namespace boost
 
     void thread::interrupt()
     {
-        detail::thread_data_ptr const local_thread_info=get_thread_info();
+        detail::thread_data_ptr const local_thread_info=(get_thread_info)();
         if(local_thread_info)
         {
             lock_guard<mutex> lk(local_thread_info->data_mutex);
@@ -424,7 +418,7 @@ namespace boost
 
     bool thread::interruption_requested() const
     {
-        detail::thread_data_ptr const local_thread_info=get_thread_info();
+        detail::thread_data_ptr const local_thread_info=(get_thread_info)();
         if(local_thread_info)
         {
             lock_guard<mutex> lk(local_thread_info->data_mutex);
@@ -438,7 +432,7 @@ namespace boost
 
     thread::native_handle_type thread::native_handle()
     {
-        detail::thread_data_ptr const local_thread_info=get_thread_info();
+        detail::thread_data_ptr const local_thread_info=(get_thread_info)();
         if(local_thread_info)
         {
             lock_guard<mutex> lk(local_thread_info->data_mutex);

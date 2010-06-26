@@ -22,6 +22,7 @@ doxygen_files =
     discard_block
     discrete_distribution
     exponential_distribution
+    extreme_value_distribution
     gamma_distribution
     geometric_distribution
     inversive_congruential
@@ -34,7 +35,8 @@ doxygen_files =
     poisson_distribution
     random_number_generator
     ranlux
-    shuffle_output
+    shuffle_order
+    # shuffle_output
     subtract_with_carry
     triangle_distribution
     uniform_01
@@ -43,6 +45,7 @@ doxygen_files =
     uniform_real
     uniform_smallint
     variate_generator
+    weibull_distribution
     xor_combine
 ;
 
@@ -104,6 +107,10 @@ doxygen reference :
         \"BOOST_PREVENT_MACRO_SUBSTITUTION=\" \\
         \"BOOST_STATIC_ASSERT(x)=\" \\
         \"BOOST_STATIC_CONSTANT(type,value)=static const type value\" \\
+        \"BOOST_RANDOM_DETAIL_OSTREAM_OPERATOR(os,T,t)=template<class CharT, class Traits> friend std::basic_ostream<CharT,Traits>& operator<<(std::basic_ostream<CharT,Traits>& os, const T& t)\" \\
+        \"BOOST_RANDOM_DETAIL_ISTREAM_OPERATOR(is,T,t)=template<class CharT, class Traits> friend std::basic_istream<CharT,Traits>& operator>>(std::basic_istream<CharT,Traits>& is, const T& t)\" \\
+        \"BOOST_RANDOM_DETAIL_EQUALITY_OPERATOR(T,lhs,rhs)=friend bool operator==(const T& rhs, const T& rhs)\" \\
+        \"BOOST_RANDOM_DETAIL_INEQUALITY_OPERATOR(T)=friend bool operator!=(const T& rhs, const T& rhs) { return !(lhs == rhs); }\" \\
         \"BOOST_RANDOM_DETAIL_ARITHMETIC_CONSTRUCTOR(Self,T,t)=explicit Self(T t)\" \\
         \"BOOST_RANDOM_DETAIL_GENERATOR_CONSTRUCTOR(Self,T,t)=template<class T> explicit Self(T& t)\" \\
         \"BOOST_RANDOM_DETAIL_SEED_SEQ_CONSTRUCTOR(Self,T,t)=template<class T> explicit Self(T& t)\" \\

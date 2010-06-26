@@ -175,6 +175,9 @@ namespace
     path xll(wl);                                      // std::list<wchar_t>
     PATH_IS(xll, L"wstring");
     BOOST_TEST_EQ(xll.native().size(), 7U);
+
+    // easy-to-make coding errors
+    // path e1(x0, path::codecvt());  // fails to compile, and that is OK
   }
 
   path x;
@@ -594,30 +597,19 @@ namespace
   {
     std::cout << "testing imbue locale..." << std::endl;
 
+    //  weak test case for before/after states since we don't know what characters the
+    //  default locale accepts. 
+    path before("abc");
+
+    //  So that tests are run with known encoding, use Boost UTF-8 codecvt
     //  \u2722 and \xE2\x9C\xA2 are UTF-16 and UTF-8 FOUR TEARDROP-SPOKED ASTERISK
 
-    std::cout << "  testing p0 ..." << std::endl;
-    path p0(L"\u2722");  // for tests that depend on path_traits::convert
-#   ifdef BOOST_WINDOWS_API
-    CHECK(p0.string() != "\xE2\x9C\xA2");
-#   endif
-    string p0_string(p0.string());
-
-    std::cout << "  testing p1 ..." << std::endl;
-    path p1("\xE2\x9C\xA2");
-#   ifdef BOOST_WINDOWS_API
-    CHECK(p1 != L"\u2722");
-#   endif
-    wstring p1_wstring(p1.wstring());
-
-    // So that tests are run with known encoding, use Boost UTF-8 codecvt
     std::locale global_loc = std::locale();
     std::locale loc(global_loc, new fs::detail::utf8_codecvt_facet);
     std::cout << "  imbuing locale ..." << std::endl;
     std::locale old_loc = path::imbue(loc);
 
     std::cout << "  testing with the imbued locale ..." << std::endl;
-    CHECK(p0.string() == "\xE2\x9C\xA2");
     path p2("\xE2\x9C\xA2");
     CHECK(p2 == L"\u2722");
     CHECK(p2.wstring() == L"\u2722");
@@ -626,14 +618,69 @@ namespace
     path::imbue(old_loc);
 
     std::cout << "  testing with the original locale ..." << std::endl;
-    CHECK(p0.string() == p0_string);
-    path p3("\xE2\x9C\xA2");
-#   ifdef BOOST_WINDOWS_API
-    CHECK(p3 != L"\u2722");
-#   endif
-    CHECK(p3.wstring() == p1_wstring);
+    path after("abc");
+    CHECK(before == after);
 
     std::cout << "  locale testing complete" << std::endl;
+  }
+
+  //  test_codecvt_argument  -----------------------------------------------------------//
+
+  void test_codecvt_argument()
+  {
+    std::cout << "testing codecvt arguments..." << std::endl;
+
+    //  U+2780 is DINGBAT CIRCLED SANS-SERIF DIGIT ONE == 0xE2 0x9E 0x80 in UTF-8
+    //  U+1234 is ETHIOPIC SYLLABLE SEE == 0xE1 0x88 0xB4 in UTF-8
+
+    const char * c1 = "\xE2\x9E\x80\xE1\x88\xB4";
+    const std::string s1("\xE2\x9E\x80\xE1\x88\xB4");
+    const std::wstring ws1(L"\u2780\u1234");
+
+    fs::detail::utf8_codecvt_facet cvt;
+
+    //  constructors
+    path p(c1, cvt);
+    CHECK(p == path(ws1));
+    path p1(s1.begin(), s1.end(), cvt);
+    CHECK(p1 == path(ws1));
+    // path p2(p1, cvt);  // fails to compile, and that is OK
+
+    //  assigns
+    p1.clear();
+    p1.assign(s1,cvt);
+    CHECK(p == p1);
+    p1.clear();
+    p1.assign(s1.begin(), s1.end(), cvt);
+    CHECK(p == p1);
+    // p1.assign(p, cvt);  // fails to compile, and that is OK
+
+
+    //  appends
+    p1.clear();
+    p1.append(s1,cvt);
+    CHECK(p == p1);
+    p1.clear();
+    p1.append(s1.begin(), s1.end(), cvt);
+    CHECK(p == p1);
+    // p1.append(p, cvt);  // fails to compile, and that is OK
+
+    //  native observers
+#   ifdef BOOST_WINDOWS_API
+    CHECK(p.string<std::string>() != s1); // non-Windows systems may have UTF-8 as default
+#   endif
+    CHECK(p.string<std::string>(cvt) == s1);
+    CHECK(p.string(cvt) == s1);
+    CHECK(p.string<std::wstring>(cvt) == ws1);
+    CHECK(p.wstring(cvt) == ws1);
+
+    //  generic observers
+    CHECK(p.generic_string<std::string>(cvt) == s1);
+    CHECK(p.generic_string(cvt) == s1);
+    CHECK(p.generic_string<std::wstring>(cvt) == ws1);
+    CHECK(p.generic_wstring(cvt) == ws1);
+
+    std::cout << "  codecvt arguments testing complete" << std::endl;
   }
 
   //  test_overloads  ------------------------------------------------------------------//
@@ -904,6 +951,7 @@ int main(int, char*[])
   test_decompositions();
   test_queries();
   test_imbue_locale();
+  test_codecvt_argument();
   test_error_handling();
 
 # if 0

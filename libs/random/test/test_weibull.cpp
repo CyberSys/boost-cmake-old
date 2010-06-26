@@ -1,4 +1,4 @@
-/* test_gamma.cpp
+/* test_weibull.cpp
  *
  * Copyright Steven Watanabe 2010
  * Distributed under the Boost Software License, Version 1.0. (See
@@ -9,11 +9,11 @@
  *
  */
 
-#include <boost/random/gamma_distribution.hpp>
+#include <boost/random/weibull_distribution.hpp>
 #include <boost/random/uniform_int.hpp>
 #include <boost/random/uniform_01.hpp>
 #include <boost/random/mersenne_twister.hpp>
-#include <boost/math/distributions/gamma.hpp>
+#include <boost/math/distributions/weibull.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/exception/diagnostic_information.hpp>
 #include <vector>
@@ -22,15 +22,15 @@
 
 #include "statistic_tests.hpp"
 
-bool do_test(double alpha, double beta, int max) {
-    std::cout << "running gamma(" << alpha << ", " << beta << ")" << " " << max << " times: " << std::flush;
+bool do_test(double a, double b, int max) {
+    std::cout << "running weibull(" << a << ", " << b << ")" << " " << max << " times: " << std::flush;
 
-    boost::math::gamma_distribution<> expected(alpha, beta);
+    boost::math::weibull_distribution<> expected(a, b);
     
-    boost::random::gamma_distribution<> dist(alpha, beta);
+    boost::random::weibull_distribution<> dist(a, b);
     boost::mt19937 gen;
     kolmogorov_experiment test(max);
-    boost::variate_generator<boost::mt19937&, boost::random::gamma_distribution<> > vgen(gen, dist);
+    boost::variate_generator<boost::mt19937&, boost::random::weibull_distribution<> > vgen(gen, dist);
 
     double prob = test.probability(test.run(vgen, expected));
 
@@ -43,10 +43,10 @@ bool do_test(double alpha, double beta, int max) {
     return result;
 }
 
-bool do_tests(int repeat, double max_alpha, double max_beta, int trials) {
+bool do_tests(int repeat, double max_a, double max_b, int trials) {
     boost::mt19937 gen;
-    boost::uniform_real<> adist(0.00001, max_alpha);
-    boost::uniform_real<> bdist(0.00001, max_beta);
+    boost::uniform_real<> adist(0.00001, max_a);
+    boost::uniform_real<> bdist(0.00001, max_b);
     int errors = 0;
     for(int i = 0; i < repeat; ++i) {
         if(!do_test(adist(gen), bdist(gen), trials)) {
@@ -60,7 +60,7 @@ bool do_tests(int repeat, double max_alpha, double max_beta, int trials) {
 }
 
 int usage() {
-    std::cerr << "Usage: test_gamma -r <repeat> -a <max alpha> -b <max beta> -t <trials>" << std::endl;
+    std::cerr << "Usage: test_weibull -r <repeat> -a <max a> -b <max b> -t <trials>" << std::endl;
     return 2;
 }
 
@@ -78,8 +78,8 @@ bool handle_option(int& argc, char**& argv, char opt, T& value) {
 
 int main(int argc, char** argv) {
     int repeat = 10;
-    double max_alpha = 1000.0;
-    double max_beta = 1000.0;
+    double max_a = 1000.0;
+    double max_b = 1000.0;
     int trials = 1000000;
 
     if(argc > 0) {
@@ -89,8 +89,8 @@ int main(int argc, char** argv) {
     while(argc > 0) {
         if(argv[0][0] != '-') return usage();
         else if(!handle_option(argc, argv, 'r', repeat)
-             && !handle_option(argc, argv, 'a', max_alpha)
-             && !handle_option(argc, argv, 'b', max_beta)
+             && !handle_option(argc, argv, 'a', max_a)
+             && !handle_option(argc, argv, 'b', max_b)
              && !handle_option(argc, argv, 't', trials)) {
             return usage();
         }
@@ -99,7 +99,7 @@ int main(int argc, char** argv) {
     }
 
     try {
-        if(do_tests(repeat, max_alpha, max_beta, trials)) {
+        if(do_tests(repeat, max_a, max_b, trials)) {
             return 0;
         } else {
             return EXIT_FAILURE;

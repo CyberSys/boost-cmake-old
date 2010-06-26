@@ -50,6 +50,7 @@ bool check_(unsigned long x, const boost::mt11213b&) { return x == 3809585648U; 
 bool check_(unsigned long x, const boost::mt19937&) { return x == 4123659995U; }
 
 #if !defined(BOOST_NO_INT64_T) && !defined(BOOST_NO_INTEGRAL_INT64_T)
+// validation from the C++0x draft (n3090)
 bool check_(boost::uint64_t x, const boost::mt19937_64&) { return x == UINT64_C(9981545732273789042); }
 #endif
 
@@ -72,6 +73,9 @@ bool check_(int x, const boost::ecuyer1988&) { return x == 2060321752; }
 
 // validation by experiment from Harry Erwin's generator.h (private e-mail)
 bool check_(unsigned int x, const boost::kreutzer1986&) { return x == 139726; }
+
+// validation from the C++0x draft (n3090)
+bool check_(unsigned int x, const boost::random::knuth_b&) { return x == 1112339016; }
 
 bool check_(double x, const boost::lagged_fibonacci607&) { return std::abs(x-0.401269) < 1e-5; }
 
@@ -126,15 +130,16 @@ void validate_all()
   validate("mt19937_64", mt19937_64());
 #endif
   validate("kreutzer1986", kreutzer1986());
+  validate("knuth_b", boost::random::knuth_b());
   validate("ranlux3", ranlux3());
   validate("ranlux4", ranlux4());
   validate("ranlux3_01", ranlux3_01());
   validate("ranlux4_01", ranlux4_01());
   validate("ranlux64_3_01", ranlux64_3_01());
   validate("ranlux64_4_01", ranlux64_4_01());
-  validate("ranlux24", random::ranlux24());
+  validate("ranlux24", boost::random::ranlux24());
 #if !defined(BOOST_NO_INT64_T) && !defined(BOOST_NO_INTEGRAL_INT64_T)
-  validate("ranlux48", random::ranlux48());
+  validate("ranlux48", boost::random::ranlux48());
 #endif
   validate("taus88", taus88());
   validate("lagged_fibonacci607", lagged_fibonacci607());
