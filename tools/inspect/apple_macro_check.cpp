@@ -11,13 +11,16 @@
 #include <functional>
 #include "boost/regex.hpp"
 #include "boost/lexical_cast.hpp"
+#include "boost/filesystem/operations.hpp"
+
+namespace fs = boost::filesystem;
 
 namespace
 {
   boost::regex apple_macro_regex(
     "("
     "^\\s*#\\s*undef\\s*" // # undef
-    "\\b(min|max)\\b"     // followed by min or max, whole word
+    "\\b(check|verify|require|check_error)\\b"     // followed by apple macro name, whole word
     ")"
     "|"                   // or (ignored)
     "("
@@ -29,7 +32,7 @@ namespace
     ")"
     "|"                   // or
     "("
-    "\\b(check|verify|require|check_error)\\b" // min or max, whole word
+    "\\b(check|verify|require|check_error)\\b" // apple macro name, whole word
     "\\s*\\("         // followed by 0 or more spaces and an opening paren
     ")"
     , boost::regex::normal);
@@ -58,6 +61,11 @@ namespace boost
       const string & contents )     // contents of file to be inspected
     {
       if (contents.find( "boostinspect:" "naapple_macros" ) != string::npos) return;
+
+      // Only check files in the boost directory, as we can avoid including the
+      // apple test headers elsewhere.
+      path relative( relative_to( full_path, fs::initial_path() ), fs::no_check );
+      if ( relative.empty() || *relative.begin() != "boost") return;
 
       boost::sregex_iterator cur(contents.begin(), contents.end(), apple_macro_regex), end;
 
