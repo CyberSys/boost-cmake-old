@@ -58,8 +58,9 @@ namespace quickbook
                     |   code
                     |   list                            [actions.list]
                     |   hr                              [actions.hr]
-                    |   comment >> *eol
-                    |   paragraph                       [actions.paragraph]
+                    |   comment >> +eol
+                    |   paragraph                       [actions.inside_paragraph]
+                    									[actions.write_paragraphs]
                     |   eol
                     )
                     ;
@@ -79,7 +80,8 @@ namespace quickbook
                     ']' |
                     if_p(var(no_eols))
                     [
-                        eol >> eol                      // Make sure that we don't go
+                        eol >> *blank_p >> eol_p
+                                                        // Make sure that we don't go
                     ]                                   // past a single block, except
                     ;                                   // when preformatted.
 
@@ -173,7 +175,7 @@ namespace quickbook
                 inside_paragraph =
                     phrase                              [actions.inside_paragraph]
                     >> *(
-                        eol >> eol >> phrase            [actions.inside_paragraph]
+                        +eol >> phrase                  [actions.inside_paragraph]
                     )
                     ;
 
@@ -410,7 +412,7 @@ namespace quickbook
                     ;
 
                 paragraph_end =
-                    '[' >> space >> paragraph_end_markups >> hard_space | eol >> eol
+                    '[' >> space >> paragraph_end_markups >> hard_space | eol >> *blank_p >> eol_p
                     ;
 
                 paragraph =
