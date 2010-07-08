@@ -231,7 +231,8 @@ namespace quickbook
 
                 template_ =
                     "template"
-                    >> hard_space >> template_id        [push_back_a(actions.template_info)]
+                    >> hard_space                       [clear_a(actions.template_info)]
+                    >> template_id                      [push_back_a(actions.template_info)]
                     >>
                     !(
                         space >> '['
@@ -245,7 +246,8 @@ namespace quickbook
 
                 template_body =
                    *(('[' >> template_body >> ']') | (anychar_p - ']'))
-                    >> space >> eps_p(']')
+                    >> eps_p(space >> ']')
+                    >> space
                     ;
 
                 variablelist =
