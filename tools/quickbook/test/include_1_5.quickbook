@@ -7,3 +7,4 @@
 [include include-sub2.quickbook]
 [include:foo include-sub2.quickbook]
 [include empty.quickbook]
+
