@@ -1,9 +1,9 @@
 foreach(
     example
-    datagram_receive_timeout
-    stream_receive_timeout
-    connect_timeout
-    accept_timeout
+    async_tcp_client
+    blocking_tcp_client
+    blocking_udp_client
+    server
 )
 boost_add_executable(
     ${example}

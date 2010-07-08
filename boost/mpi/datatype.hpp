@@ -27,7 +27,6 @@
 #include <boost/mpi/detail/mpi_datatype_cache.hpp>
 #include <boost/mpl/assert.hpp>
 #include <boost/archive/basic_archive.hpp>
-#include <boost/serialization/collection_size_type.hpp>
 #include <boost/serialization/item_version_type.hpp>
 #include <utility> // for std::pair
 
@@ -301,6 +300,7 @@ BOOST_MPI_DATATYPE(unsigned __int64, MPI_UNSIGNED_LONG_LONG, builtin);
 BOOST_MPI_DATATYPE(signed char, MPI_SIGNED_CHAR, builtin);
 #endif
 
+
 #endif // Doxygen
 
 namespace detail {
@@ -328,38 +328,24 @@ struct is_mpi_datatype<bool>
   : boost::mpl::bool_<true>
 {};
 
-template<>
-struct is_mpi_datatype<boost::archive::tracking_type> :
-public is_mpi_datatype<bool> {
-};
 
-template<>
-struct is_mpi_datatype<boost::archive::class_id_type> :
-public is_mpi_datatype<boost::archive::class_id_type::base_type> {
-};
+#ifndef BOOST_MPI_DOXYGEN
+// direct support for special primitive data types of the serialization library
+BOOST_MPI_DATATYPE(boost::archive::library_version_type, get_mpi_datatype(uint_least16_t()), integer);
+BOOST_MPI_DATATYPE(boost::archive::version_type, get_mpi_datatype(uint_least8_t()), integer);
+BOOST_MPI_DATATYPE(boost::archive::class_id_type, get_mpi_datatype(int_least16_t()), integer);
+BOOST_MPI_DATATYPE(boost::archive::class_id_reference_type, get_mpi_datatype(int_least16_t()), integer);
+BOOST_MPI_DATATYPE(boost::archive::class_id_optional_type, get_mpi_datatype(int_least16_t()), integer);
+BOOST_MPI_DATATYPE(boost::archive::object_id_type, get_mpi_datatype(uint_least32_t()), integer);
+BOOST_MPI_DATATYPE(boost::archive::object_reference_type, get_mpi_datatype(uint_least32_t()), integer);
+BOOST_MPI_DATATYPE(boost::archive::tracking_type, get_mpi_datatype(bool()), builtin);
+BOOST_MPI_DATATYPE(boost::serialization::collection_size_type, get_mpi_datatype(std::size_t()), builtin);
+BOOST_MPI_DATATYPE(boost::serialization::item_version_type, get_mpi_datatype(uint_least8_t()), builtin);
 
-template<>
-struct is_mpi_datatype<boost::serialization::item_version_type> :
-public is_mpi_datatype<boost::serialization::item_version_type::base_type> {
-};
+#endif // Doxygen
 
-template<>
-struct is_mpi_datatype<boost::archive::version_type> :
-public is_mpi_datatype<boost::archive::version_type::base_type> {
-};
-
-template<>
-struct is_mpi_datatype<boost::serialization::collection_size_type> :
-public is_mpi_datatype<std::size_t> {
-};
 
 } } // end namespace boost::mpi
-
-BOOST_ARCHIVE_STRONG_TYPEDEF_MPI(uint_least16_t, library_version_type)
-BOOST_ARCHIVE_STRONG_TYPEDEF_MPI(int_least16_t, class_id_optional_type)
-BOOST_ARCHIVE_STRONG_TYPEDEF_MPI(int_least16_t, class_id_reference_type)
-BOOST_ARCHIVE_STRONG_TYPEDEF_MPI(uint_least32_t, object_id_type)
-BOOST_ARCHIVE_STRONG_TYPEDEF_MPI(uint_least32_t, object_reference_type)
 
 // define a macro to make explicit designation of this more transparent
 #define BOOST_IS_MPI_DATATYPE(T)              \

@@ -126,7 +126,7 @@ namespace quickbook
                         ch_p('`')                       [assign_a(actions.template_escape,true_)]
                         |
                         eps_p                           [assign_a(actions.template_escape,false_)]
-                    )
+                    )                                   [clear_a(actions.template_info)]
                     >>
                     ( (
                         (eps_p(punct_p)
@@ -135,10 +135,10 @@ namespace quickbook
                         >> !template_args
                     ) | (
                         (actions.templates.scope
-                            >> eps_p
+                            >> eps_p(hard_space)
                         )                               [push_back_a(actions.template_info)]
-                        >> !(hard_space
-                            >> template_args)
+                        >> space
+                        >> !template_args
                     ) )
                     >> eps_p(']')
                     ;
