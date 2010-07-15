@@ -15,7 +15,10 @@
 #include <boost/functional/hash/detail/hash_float.hpp>
 #include <string>
 #include <boost/limits.hpp>
+
+#if defined(BOOST_HASH_NO_IMPLICIT_CASTS)
 #include <boost/static_assert.hpp>
+#endif
 
 #if defined(BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION)
 #include <boost/type_traits/is_pointer.hpp>
@@ -30,6 +33,8 @@
 
 namespace boost
 {
+#if defined(BOOST_HASH_NO_IMPLICIT_CASTS)
+
     // If you get a static assertion here, it's because hash_value
     // isn't declared for your type.
     template <typename T>
@@ -37,6 +42,8 @@ namespace boost
         BOOST_STATIC_ASSERT((T*) 0 && false);
         return 0;
     }
+
+#endif
 
     std::size_t hash_value(bool);
     std::size_t hash_value(char);

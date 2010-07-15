@@ -20,9 +20,8 @@ namespace serialization {
 #endif
 
 class item_version_type {
-public:
-    typedef uint_least8_t base_type;
 private:
+    typedef unsigned int base_type;
     base_type t;
     item_version_type(): t(0) {};
 public:
@@ -40,7 +39,7 @@ public:
     operator const base_type () const {
         return t;
     }                
-    // used for text output
+    // used for text input
     operator base_type & () {
         return t;
     }
