@@ -59,6 +59,7 @@ namespace boost
             int const set_attr_res=pthread_mutexattr_settype(&attr,PTHREAD_MUTEX_RECURSIVE);
             if(set_attr_res)
             {
+                BOOST_VERIFY(!pthread_mutexattr_destroy(&attr));
                 boost::throw_exception(thread_resource_error());
             }
             
