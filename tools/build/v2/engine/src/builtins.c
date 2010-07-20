@@ -381,6 +381,11 @@ void load_builtins()
                         builtin_precious, 0, args );
       }
 
+      {
+          char * args [] = { 0 };
+          bind_builtin( "SELF_PATH", builtin_self_path, 0, args );
+      }
+
       /* Initialize builtin modules. */
       init_set();
       init_path();
@@ -1707,6 +1712,22 @@ LIST *builtin_precious( PARSE *parse, FRAME *frame )
     return L0;
 }
 
+LIST *builtin_self_path( PARSE *parse, FRAME *frame )
+{
+    extern char *saved_argv0;
+    char *p = executable_path (saved_argv0);
+    if (p)
+    {
+        LIST* result = list_new (0, newstr (p));
+        free(p);
+        return result;
+    }
+    else
+    {
+        return L0;
+    }
+}
+
 
 #ifdef HAVE_PYTHON
 
@@ -1902,8 +1923,12 @@ PyObject* bjam_call( PyObject * self, PyObject * args )
 
 
 /*
- * Accepts three arguments: module name, rule name and Python callable. Creates
- * a bjam rule with the specified name in the specified module, which will
+ * Accepts four arguments: 
+ * - module name
+ * - rule name,
+ * - Python callable. 
+ * - (optional) bjam language function signature.
+ * Creates a bjam rule with the specified name in the specified module, which will
  * invoke the Python callable.
  */
 
@@ -1912,10 +1937,12 @@ PyObject * bjam_import_rule( PyObject * self, PyObject * args )
     char     * module;
     char     * rule;
     PyObject * func;
+    PyObject * bjam_signature = NULL;
     module_t * m;
     RULE     * r;
 
-    if ( !PyArg_ParseTuple( args, "ssO:import_rule", &module, &rule, &func ) )
+    if ( !PyArg_ParseTuple( args, "ssO|O:import_rule", 
+                            &module, &rule, &func, &bjam_signature ) )
         return NULL;
 
     if ( !PyCallable_Check( func ) )
@@ -1932,6 +1959,22 @@ PyObject * bjam_import_rule( PyObject * self, PyObject * args )
     Py_INCREF( func );
 
     r->python_function = func;
+    r->arguments = 0;
+
+    if (bjam_signature)
+    {
+        argument_list * arg_list = args_new();
+        Py_ssize_t i;
+
+        Py_ssize_t s = PySequence_Size (bjam_signature);
+        for (i = 0; i < s; ++i)
+        {
+            PyObject* v = PySequence_GetItem (bjam_signature, i);
+            lol_add(arg_list->data, list_from_python (v));
+            Py_DECREF(v);
+        }
+        r->arguments = arg_list;
+    }
 
     Py_INCREF( Py_None );
     return Py_None;
