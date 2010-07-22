@@ -569,30 +569,30 @@ int main( int argc, char * * argv, char * * arg_environ )
 
 #if defined(_WIN32)
 #include <windows.h>
-char *executable_path(char *arvg0) {
+char *executable_path(char *argv0) {
     char buf[1024];
     DWORD ret = GetModuleFileName(NULL, buf, sizeof(buf));
     if (ret == 0 || ret == sizeof(buf)) return NULL;
     return strdup (buf);
 }
-#elif defined(__APPLE__)  // Not tested
+#elif defined(__APPLE__)  /* Not tested */
 #include <mach-o/dyld.h>
-char *executable_path(char *arvg0) {
+char *executable_path(char *argv0) {
     char buf[1024];
     uint32_t size = sizeof(buf);
     int ret = _NSGetExecutablePath(buf, &size);
     if (ret != 0) return NULL;
     return strdup(buf);
 }
-#elif defined(sun) || defined(__sun) // Not tested
+#elif defined(sun) || defined(__sun) /* Not tested */
 #include <stdlib.h>
 
-char *executable_path(char *arvg0) {
-    return stdrup(getexecname());
+char *executable_path(char *argv0) {
+    return strdup(getexecname());
 }
 #elif defined(__FreeBSD__)
 #include <sys/sysctl.h>
-char *executable_path(char *arvg0) {
+char *executable_path(char *argv0) {
     int mib[4];
     mib[0] = CTL_KERN;
     mib[1] = KERN_PROC;
@@ -606,16 +606,15 @@ char *executable_path(char *arvg0) {
 }
 #elif defined(__linux__)
 #include <unistd.h>
-char *executable_path(char *arvg0) {
+char *executable_path(char *argv0) {
     char buf[1024];
     ssize_t ret = readlink("/proc/self/exe", buf, sizeof(buf));
     if (ret == 0 || ret == sizeof(buf)) return NULL;
     return strndup(buf, ret);
 }
 #else
-char *executable_path(char *arvg0) {
-    // If argv0 is absolute path, assume it's the right
-    // absolute path.
+char *executable_path(char *argv0) {
+    /* If argv0 is absolute path, assume it's the right absolute path. */
     if (argv0[0] == "/")
         return strdup(argv0);
     return NULL;
