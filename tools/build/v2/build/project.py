@@ -727,7 +727,7 @@ class ProjectAttributes:
                 # FIXME:
                 #errors.error "usage-requirements" $(specification) "have non-free properties" $(non-free) ;
 
-            t = property.translate_paths(specification, self.location)
+            t = property.translate_paths(property.create_from_strings(specification), self.location)
 
             existing = self.__dict__.get("usage-requirements")
             if existing:
@@ -794,8 +794,16 @@ class ProjectRules:
         self.rules = {}
         self.local_names = [x for x in self.__class__.__dict__
                             if x not in ["__init__", "init_project", "add_rule",
-                                         "error_reporting_wrapper", "add_rule_for_type"]]
+                                         "error_reporting_wrapper", "add_rule_for_type", "reverse"]]
         self.all_names_ = [x for x in self.local_names]
+        self.reverse = {}
+
+    def _import_rule(self, bjam_module, name, callable):
+        if hasattr(callable, "bjam_signature"):
+            bjam.import_rule(bjam_module, name, self.make_wrapper(callable), callable.bjam_signature)
+        else:
+            bjam.import_rule(bjam_module, name, self.make_wrapper(callable))
+        
 
     def add_rule_for_type(self, type):
         rule_name = type.lower();
@@ -811,14 +819,20 @@ class ProjectRules:
         self.rules[name] = callable
         self.all_names_.append(name)
 
+        # Add new rule at global bjam scope. This might not be ideal,
+        # added because if a jamroot does 'import foo' where foo calls
+        # add_rule, we need to import new rule to jamroot scope, and
+        # I'm lazy to do this now.
+        self._import_rule("", name, callable)
+
     def all_names(self):
         return self.all_names_
 
-    def call_and_report_errors(self, callable, *args):
+    def call_and_report_errors(self, callable, *args, **kw):
         result = None
         try:
             self.manager_.errors().push_jamfile_context()
-            result = callable(*args)
+            result = callable(*args, **kw)
         except ExceptionWithUserContext, e:
             e.report()
         except Exception, e:
@@ -835,8 +849,8 @@ class ProjectRules:
         """Given a free-standing function 'callable', return a new
         callable that will call 'callable' and report all exceptins,
         using 'call_and_report_errors'."""
-        def wrapper(*args):
-            self.call_and_report_errors(callable, *args)
+        def wrapper(*args, **kw):
+            self.call_and_report_errors(callable, *args, **kw)
         return wrapper
 
     def init_project(self, project_module):
@@ -851,12 +865,10 @@ class ProjectRules:
                 else:
                     n = string.replace(n, "_", "-")
                     
-                bjam.import_rule(project_module, n,
-                                 self.make_wrapper(v))
+                self._import_rule(project_module, n, v)
 
         for n in self.rules:
-            bjam.import_rule(project_module, n,
-                             self.make_wrapper(self.rules[n]))
+            self._import_rule(project_module, n, self.rules[n])
 
     def project(self, *args):
 
@@ -990,10 +1002,8 @@ attribute is allowed only for top-level 'project' invocations""")
         for f in m.__dict__:
             v = m.__dict__[f]
             if callable(v):
-                if hasattr(v, "bjam_signature"):
-                    bjam.import_rule(jamfile_module, name + "." + f, v, v.bjam_signature)
-                else:
-                    bjam.import_rule(jamfile_module, name + "." + f, v)
+                self._import_rule(jamfile_module, name + "." + f, v)
+                self.reverse.setdefault(jamfile_module, {})[name + "." + f] = v
 
         if names_to_import:
             if not local_names:
@@ -1004,7 +1014,7 @@ attribute is allowed only for top-level 'project' invocations""")
 """The number of names to import and local names do not match.""")
 
             for n, l in zip(names_to_import, local_names):
-                bjam.import_rule(jamfile_module, l, m.__dict__[n])
+                self._import_rule(jamfile_module, l, m.__dict__[n])
         
     def conditional(self, condition, requirements):
         """Calculates conditional requirements for multiple requirements
@@ -1020,3 +1030,11 @@ attribute is allowed only for top-level 'project' invocations""")
             return [c + r for r in requirements]
         else:
             return [c + ":" + r for r in requirements]
+
+    def reverse_lookup(self, jamfile_module, name_in_jamfile_modue):
+        """Return callable that we've previously imported to jam."""
+
+        if self.reverse.has_key(jamfile_module):
+            return self.reverse[jamfile_module].get(name_in_jamfile_modue, None)
+
+        return None

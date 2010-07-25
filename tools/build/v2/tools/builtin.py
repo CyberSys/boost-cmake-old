@@ -47,39 +47,35 @@ def variant (name, parents_or_properties, explicit_properties = []):
     """
     parents = []
     if not explicit_properties:
-        if get_grist (parents_or_properties [0]):
-            explicit_properties = parents_or_properties
-
-        else:
-            parents = parents_or_properties
-
+        explicit_properties = parents_or_properties
     else:
         parents = parents_or_properties
-
-    # The problem is that we have to check for conflicts
-    # between base variants.
-    if len (parents) > 1:
-        raise BaseException ("Multiple base variants are not yet supported")
     
-    inherited = []
-    # Add explicitly specified properties for parents
-    for p in parents:
+    inherited = property_set.empty()
+    if parents:
+
+        # If we allow multiple parents, we'd have to to check for conflicts
+        # between base variants, and there was no demand for so to bother.
+        if len (parents) > 1:
+            raise BaseException ("Multiple base variants are not yet supported")
+        
+        p = parents[0]
         # TODO: the check may be stricter
         if not feature.is_implicit_value (p):
             raise BaseException ("Invalid base varaint '%s'" % p)
         
-        inherited += __variant_explicit_properties [p]
+        inherited = __variant_explicit_properties[p]
 
-    property.validate (explicit_properties)
-    explicit_properties = property.refine (inherited, explicit_properties)
+    explicit_properties = property_set.create_with_validation(explicit_properties)
+    explicit_properties = inherited.refine(explicit_properties)
     
     # Record explicitly specified properties for this variant
     # We do this after inheriting parents' properties, so that
     # they affect other variants, derived from this one.
-    __variant_explicit_properties [name] = explicit_properties
+    __variant_explicit_properties[name] = explicit_properties
            
     feature.extend('variant', [name])
-    feature.compose (replace_grist (name, '<variant>'), explicit_properties)
+    feature.compose ("<variant>" + name, explicit_properties.all())
 
 __os_names = """
     amiga aix bsd cygwin darwin dos emx freebsd hpux iphone linux netbsd
@@ -294,6 +290,11 @@ def register_globals ():
         'armv5t', 'armv5te', 'armv6', 'armv6j', 'iwmmxt', 'ep9312'],
 
         ['propagated', 'optional'])
+
+    feature.feature('conditional', [], ['incidental', 'free'])
+
+    # The value of 'no' prevents building of a target.
+    feature.feature('build', ['yes', 'no'], ['optional'])
     
     # Windows-specific features
     feature.feature ('user-interface', ['console', 'gui', 'wince', 'native', 'auto'], [])
@@ -315,7 +316,7 @@ register_globals ()
 
 class SearchedLibTarget (virtual_target.AbstractFileTarget):
     def __init__ (self, name, project, shared, real_name, search, action):
-        virtual_target.AbstractFileTarget.__init__ (self, name, False, 'SEARCHED_LIB', project, action)
+        virtual_target.AbstractFileTarget.__init__ (self, name, 'SEARCHED_LIB', project, action)
         
         self.shared_ = shared
         self.real_name_ = real_name

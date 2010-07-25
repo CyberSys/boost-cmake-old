@@ -81,7 +81,7 @@ import property, project, virtual_target, property_set, feature, generators, too
 from virtual_target import Subvariant
 from b2.exceptions import *
 from b2.util.sequence import unique
-from b2.util import set, path
+from b2.util import set, path, bjam_signature
 from b2.build.errors import user_error_checkpoint
 
 _re_separate_target_from_properties = re.compile (r'^([^<]*)(/(<.*))?$')
@@ -96,7 +96,7 @@ class TargetRegistry:
         # Current indent for debugging messages
         self.indent_ = ""
 
-        self.debug_building_ = "--debug-building" in bjam.variable("ARGV")
+        self.debug_building_ = "--debug-building" in bjam.variable("ARV")
 
     def main_target_alternative (self, target):
         """ Registers the specified target as a main target alternatives.
@@ -685,7 +685,7 @@ class MainTarget (AbstractTarget):
             # be an indication that
             # build_request.expand-no-defaults is the wrong rule
             # to use here.
-            compressed = feature.compress-subproperties (raw)
+            compressed = feature.compress_subproperties (raw)
 
             properties = build_request.expand_no_defaults (compressed, defaults_to_apply)
               
@@ -869,17 +869,24 @@ class BasicTarget (AbstractTarget):
             common to dependency build request and target build
             properties.
         """
-        # For optimization, we add free requirements directly,
+        # For optimization, we add free unconditional requirements directly,
         # without using complex algorithsm.
-        # This gives the complex algorithm better chance of caching results.
-        free = requirements.free ()        
-        non_free = property_set.create (requirements.base () + requirements.incidental ())
-        
-        key = str (build_request) + '-' + str (non_free)
-        if not self.request_cache.has_key (key):
-            self.request_cache [key] = self.__common_properties2 (build_request, non_free)       
+        # This gives the complex algorithm better chance of caching results.        
+        # The exact effect of this "optimization" is no longer clear
+        free_unconditional = []
+        other = []
+        for p in requirements.all():
+            if p.feature().free() and not p.condition():
+                free_unconditional.append(p)
+            else:
+                other.append(p)
+        other = property_set.create(other)
+                
+        key = (build_request, other)
+        if not self.request_cache.has_key(key):
+            self.request_cache[key] = self.__common_properties2 (build_request, other)
 
-        return self.request_cache [key].add_raw (free)
+        return self.request_cache[key].add_raw(free_unconditional)
 
     # Given 'context' -- a set of already present properties, and 'requirements',
     # decide which extra properties should be applied to 'context'. 
@@ -906,10 +913,10 @@ class BasicTarget (AbstractTarget):
         #    <threading>single 
         #
         # might come from project's requirements.
-    
+
         unconditional = feature.expand(requirements.non_conditional())
     
-        raw = context.raw()
+        raw = context.all()
         raw = property.refine(raw, unconditional)
       
         # We've collected properties that surely must be present in common
@@ -974,14 +981,14 @@ class BasicTarget (AbstractTarget):
         # TODO: There is possibility that we've added <foo>bar, which is composite
         # and expands to <foo2>bar2, but default value of <foo2> is not bar2,
         # in which case it's not clear what to do.
-        # 
+        #
         build_request = build_request.add_defaults()
         # Featured added by 'add-default' can be composite and expand
         # to features without default values -- so they are not added yet.
         # It could be clearer/faster to expand only newly added properties
         # but that's not critical.
         build_request = build_request.expand()
-        
+      
         return self.evaluate_requirements(requirements, build_request,
                                           "refined")
     
@@ -1077,7 +1084,7 @@ class BasicTarget (AbstractTarget):
                 result = GenerateResult ()
 
                 properties = rproperties.non_dependency ()
-                
+
                 (p, u) = self.generate_dependencies (rproperties.dependency (), rproperties)
                 properties += p
                 usage_requirements = u
@@ -1261,3 +1268,22 @@ class TypedTarget (BasicTarget):
         
         return r
 
+def metatarget_function_for_class(class_):
+
+    @bjam_signature((["name"], ["sources", "*"], ["requirements", "*"],
+                     ["default_build", "*"], ["usage_requirements", "*"]))
+    def create_metatarget(name, sources, requirements = [], default_build = None, usage_requirements = []):
+
+        from b2.manager import get_manager
+        t = get_manager().targets()
+
+        project = get_manager().projects().current()
+        
+        return t.main_target_alternative(
+            class_(name, project,
+                   t.main_target_sources(sources, name),
+                   t.main_target_requirements(requirements, project),
+                   t.main_target_default_build(default_build, project),
+                   t.main_target_usage_requirements(usage_requirements, project)))
+
+    return create_metatarget
