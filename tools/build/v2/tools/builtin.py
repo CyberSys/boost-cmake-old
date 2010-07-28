@@ -379,8 +379,8 @@ class CScanner (scanner.Scanner):
         bjam.call("mark-included", target, all)
 
         engine = get_manager().engine()
-        engine.set_target_variable(angle, "SEARCH", self.includes_)
-        engine.set_target_variable(quoted, "SEARCH", self.includes_)
+        engine.set_target_variable(angle, "SEARCH", get_value(self.includes_))
+        engine.set_target_variable(quoted, "SEARCH", [b] + get_value(self.includes_))
         
         # Just propagate current scanner to includes, in a hope
         # that includes do not change scanners. 
@@ -388,6 +388,7 @@ class CScanner (scanner.Scanner):
         
 scanner.register (CScanner, 'include')
 type.set_scanner ('CPP', CScanner)
+type.set_scanner ('C', CScanner)
 
 # Ported to trunk@47077
 class LibGenerator (generators.Generator):
@@ -659,15 +660,12 @@ class LinkingGenerator (generators.Generator):
 
         # sources to pass to inherited rule
         sources2 = []
-        # properties to pass to inherited rule
-        properties2  = []
         # sources which are libraries
         libraries  = []
         
         # Searched libraries are not passed as argument to linker
         # but via some option. So, we pass them to the action
         # via property. 
-        properties2 = prop_set.raw()
         fsa = []
         fst = []
         for s in sources:
@@ -682,12 +680,13 @@ class LinkingGenerator (generators.Generator):
             else:
                 sources2.append(s)
 
+        add = []
         if fsa:
-            properties2 += [replace_grist('&&'.join(fsa), '<find-shared-library>')]
+            add.append("<find-shared-library>" + '&&'.join(fsa))
         if fst:
-            properties2 += [replace_grist('&&'.join(fst), '<find-static-library>')]
+            add.append("<find-static-library>" + '&&'.join(fst))
                 
-        spawn = generators.Generator.generated_targets(self, sources2, property_set.create(properties2), project, name)
+        spawn = generators.Generator.generated_targets(self, sources2,prop_set.add_raw(add), project, name)
         
         return spawn
 
