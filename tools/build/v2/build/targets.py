@@ -76,13 +76,19 @@ import re
 import os.path
 import sys
 
+from b2.manager import get_manager
+
 from b2.util.utility import *
 import property, project, virtual_target, property_set, feature, generators, toolset
 from virtual_target import Subvariant
 from b2.exceptions import *
 from b2.util.sequence import unique
-from b2.util import set, path, bjam_signature
+from b2.util import path, bjam_signature
 from b2.build.errors import user_error_checkpoint
+
+import b2.build.build_request as build_request
+
+import b2.util.set
 
 _re_separate_target_from_properties = re.compile (r'^([^<]*)(/(<.*))?$')
 
@@ -96,7 +102,7 @@ class TargetRegistry:
         # Current indent for debugging messages
         self.indent_ = ""
 
-        self.debug_building_ = "--debug-building" in bjam.variable("ARV")
+        self.debug_building_ = "--debug-building" in bjam.variable("ARGV")
 
     def main_target_alternative (self, target):
         """ Registers the specified target as a main target alternatives.
@@ -357,7 +363,7 @@ class ProjectTarget (AbstractTarget):
         self.main_target_ = {}
         
         # Targets marked as explicit.
-        self.explicit_targets_ = []
+        self.explicit_targets_ = set()
 
         # The constants defined for this project.
         self.constants_ = {}
@@ -378,8 +384,7 @@ class ProjectTarget (AbstractTarget):
         if not self.build_dir_:
             self.build_dir_ = self.get ('build-dir')
             if not self.build_dir_:
-                self.build_dir_ = os.path.join (os.path.dirname(
-                    self.project_.get ('location')), 'bin')
+                self.build_dir_ = os.path.join(self.project_.get ('location'), 'bin')
 
         return self.build_dir_
 
@@ -387,7 +392,7 @@ class ProjectTarget (AbstractTarget):
         """ Generates all possible targets contained in this project.
         """
         self.manager_.targets().log(
-            "Building project '%s' with '%s'" % (self.name (), ps.raw ()))
+            "Building project '%s' with '%s'" % (self.name (), str(ps)))
         self.manager_.targets().increase_indent ()
         
         result = GenerateResult ()
@@ -426,7 +431,7 @@ class ProjectTarget (AbstractTarget):
         
         # Record the name of the target, not instance, since this
         # rule is called before main target instaces are created.
-        self.explicit_.append(target_name)
+        self.explicit_targets_.add(target_name)
     
     def add_alternative (self, target_instance):
         """ Add new target alternative.
@@ -575,7 +580,7 @@ class ProjectTarget (AbstractTarget):
         if not rules:
             rules = []
         user_rules = [x for x in rules
-                      if x not in self.manager().projects().project_rules()]
+                      if x not in self.manager().projects().project_rules().all_names()]
         if user_rules:
             bjam.call("import-rules-from-parent", parent_module, this_module, user_rules)
         
@@ -593,10 +598,10 @@ class MainTarget (AbstractTarget):
         d = target.default_build ()
         
         if self.alternatives_ and self.default_build_ != d:
-            raise BaseException ("Default build must be identical in all alternatives\n"
+            get_manager().errors()("default build must be identical in all alternatives\n"
               "main target is '%s'\n"
               "with '%s'\n"
-              "differing from previous default build: '%s'" % (full_name (), d.raw (), self.default_build_.raw ()))
+              "differing from previous default build: '%s'" % (self.full_name (), d.raw (), self.default_build_.raw ()))
 
         else:
             self.default_build_ = d
@@ -636,14 +641,14 @@ class MainTarget (AbstractTarget):
                     best_properties = properties
 
                 else:
-                    if set.equal (properties, best_properties):
+                    if b2.util.set.equal (properties, best_properties):
                         return None
 
-                    elif set.contains (properties, best_properties):
+                    elif b2.util.set.contains (properties, best_properties):
                         # Do nothing, this alternative is worse
                         pass
 
-                    elif set.contains (best_properties, properties):
+                    elif b2.util.set.contains (best_properties, properties):
                         best = v
                         best_properties = properties
 
@@ -655,14 +660,13 @@ class MainTarget (AbstractTarget):
     def apply_default_build (self, property_set):
         # 1. First, see what properties from default_build
         # are already present in property_set. 
-        
-        raw = property_set.raw ()
-        specified_features = get_grist (raw)
+
+        specified_features = set(p.feature() for p in property_set.all())
         
         defaults_to_apply = []
-        for d in self.default_build_.raw ():
-            if not get_grist (d) in specified_features:
-                defaults_to_apply.append (d)
+        for d in self.default_build_.all():
+            if not d.feature() in specified_features:
+                defaults_to_apply.append(d)
         
         # 2. If there's any defaults to be applied, form the new
         # build request. Pass it throw 'expand-no-defaults', since
@@ -685,16 +689,10 @@ class MainTarget (AbstractTarget):
             # be an indication that
             # build_request.expand-no-defaults is the wrong rule
             # to use here.
-            compressed = feature.compress_subproperties (raw)
+            compressed = feature.compress_subproperties(property_set.all())
 
-            properties = build_request.expand_no_defaults (compressed, defaults_to_apply)
-              
-            if properties:
-                for p in properties:
-                    result.append (property_set.create (feature.expand (feature.split (p))))
-
-            else:
-                result .append (property_set.empty ())
+            result = build_request.expand_no_defaults(
+                b2.build.property_set.create([p]) for p in (compressed + defaults_to_apply))
             
         else:
             result.append (property_set)
@@ -918,7 +916,7 @@ class BasicTarget (AbstractTarget):
     
         raw = context.all()
         raw = property.refine(raw, unconditional)
-      
+
         # We've collected properties that surely must be present in common
         # properties. We now try to figure out what other properties
         # should be added in order to satisfy rules (4)-(6) from the docs.
@@ -1006,12 +1004,12 @@ class BasicTarget (AbstractTarget):
         # build request just to select this variant.
         bcondition = self.requirements_.base ()
         ccondition = self.requirements_.conditional ()
-        condition = set.difference (bcondition, ccondition)
+        condition = b2.util.set.difference (bcondition, ccondition)
 
         if debug:
             print "    next alternative: required properties:", str(condition)
         
-        if set.contains (condition, property_set.raw ()):
+        if b2.util.set.contains (condition, property_set.raw ()):
 
             if debug:
                 print "        matched"
@@ -1041,8 +1039,8 @@ class BasicTarget (AbstractTarget):
             #       is the object itself. This won't work in python.
             targets = [ self.manager_.register_object (x) for x in result.targets () ]
             
-            result_var += replace_grist (targets, grist)
-            usage_requirements += result.usage_requirements ().raw ()
+            result_var += replace_grist(targets, grist)
+            usage_requirements += result.usage_requirements().all()
 
         return (result_var, usage_requirements)
 
@@ -1067,7 +1065,7 @@ class BasicTarget (AbstractTarget):
             self.manager().targets().log(
                 "Target requirements: %s'" % str (self.requirements().raw ()))
 
-        if not self.generated_.has_key (str (ps)):
+        if not self.generated_.has_key(ps):
 
             # Apply free features form the command line.  If user
             # said 
@@ -1077,9 +1075,9 @@ class BasicTarget (AbstractTarget):
             rproperties = self.common_properties (ps, self.requirements_)
 
             self.manager().targets().log(
-                "Common properties are '%s'" % str (rproperties.raw ()))
-            
-            if rproperties.get("<build>") != "no":
+                "Common properties are '%s'" % str (rproperties))
+          
+            if rproperties.get("<build>") != ["no"]:
                 
                 result = GenerateResult ()
 
@@ -1095,11 +1093,13 @@ class BasicTarget (AbstractTarget):
                 self.manager_.targets().log(
                     "Usage requirements for '%s' are '%s'" % (self.name_, usage_requirements))
 
-                rproperties = property_set.create (properties + usage_requirements)
+                # FIXME:
+                
+                rproperties = property_set.create(properties + [p.to_raw() for p in usage_requirements])
                 usage_requirements = property_set.create (usage_requirements)
 
                 self.manager_.targets().log(
-                    "Build properties: '%s'" % str(rproperties.raw()))
+                    "Build properties: '%s'" % str(rproperties))
                 
                 extra = rproperties.get ('<source>')
                 source_targets += replace_grist (extra, '')               
@@ -1130,9 +1130,9 @@ class BasicTarget (AbstractTarget):
                         "Usage requirements from '%s' are '%s'" %
                         (self.name, str(rproperties.raw())))
                     
-                    self.generated_ [str (ps)] = GenerateResult (ur, result)
+                    self.generated_[ps] = GenerateResult (ur, result)
                 else:
-                    self.generated_ [str (ps)] = GenerateResult (property_set.empty(), [])
+                    self.generated_[ps] = GenerateResult (property_set.empty(), [])
             else:
                 self.manager().targets().log(
                     "Skipping build: <build>no in common properties")
@@ -1141,13 +1141,13 @@ class BasicTarget (AbstractTarget):
                 # properties, or there's <build>no in properties.
                 # In the latter case we don't want any diagnostic.
                 # In the former case, we need diagnostics. TODOo
-                self.generated_ [str (ps)] = GenerateResult (rproperties, [])
+                self.generated_[ps] = GenerateResult (rproperties, [])
         else:
             self.manager().targets().log ("Already built")
 
         self.manager().targets().decrease_indent()
 
-        return self.generated_ [str (ps)]
+        return self.generated_[ps]
 
     def generate_from_reference (self, target_reference, project, property_set):
         """ Attempts to generate the target given by target reference, which
@@ -1250,7 +1250,7 @@ class TypedTarget (BasicTarget):
             
     def construct (self, name, source_targets, prop_set):
         r = generators.construct (self.project_, name, self.type_, 
-            property_set.create (prop_set.raw () + ['<main-target-type>' + self.type_]),
+                                  prop_set.add_raw(['<main-target-type>' + self.type_]),
             source_targets)
 
         if not r:

@@ -246,6 +246,10 @@ def is_implicit_value (value_string):
     """ Returns true iff 'value_string' is a value_string
     of an implicit feature.
     """
+
+    if __implicit_features.has_key(value_string):
+        return __implicit_features[value_string]
+    
     v = value_string.split('-')
 
     if not __implicit_features.has_key(v[0]):
@@ -487,6 +491,8 @@ def extend_subfeature (feature_name, value_string, subfeature_name, subvalues):
     for subvalue in subvalues:
         __subfeature_from_value [feature][value_string][subvalue] = subfeature
 
+@bjam_signature((["feature_name", "value_string", "?"], ["subfeature"],
+                 ["subvalues", "*"], ["attributes", "*"]))
 def subfeature (feature_name, value_string, subfeature, subvalues, attributes = []):
     """ Declares a subfeature.
         feature_name:   Root feature that is not a subfeature.
@@ -517,6 +523,7 @@ def subfeature (feature_name, value_string, subfeature, subvalues, attributes = 
     extend_subfeature (feature_name, value_string, subfeature, subvalues)
 
 
+@bjam_signature((["composite_property_s"], ["component_properties_s", "*"]))
 def compose (composite_property_s, component_properties_s):
     """ Sets the components of the given composite property.
 
@@ -828,27 +835,28 @@ def compress_subproperties (properties):
         purposes and it needs help
     """
     result = []
-    matched_subs = []
+    matched_subs = set()
+    all_subs = set()
     for p in properties:
-        pg = get_grist (p)
-        if not pg:
-            raise BaseException ("Gristed variable exppected. Got '%s'." % p)
+        f = p.feature()
         
-        if not __all_features [pg].subfeature():
+        if not f.subfeature():
             subs = __select_subproperties (p, properties)
+            if subs:
             
-            matched_subs.extend (subs)
+                matched_subs.update(subs)
 
-            subvalues = '-'.join (get_value (subs))
-            if subvalues: subvalues = '-' + subvalues
-
-            result.append (p + subvalues)
+                subvalues = '-'.join (sub.value() for sub in subs)
+                result.append(Property(p.feature(), p.value + '-' + subvalues,
+                                       p.condition()))
+            else:
+                result.append(p)
 
         else:
-            all_subs.append (p)
+            all_subs.add(p)
 
     # TODO: this variables are used just for debugging. What's the overhead?
-    assert (b2.util.set.equal (all_subs, matched_subs))
+    assert all_subs == matched_subs
 
     return result
 

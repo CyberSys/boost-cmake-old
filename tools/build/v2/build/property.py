@@ -64,6 +64,9 @@ class Property(object):
 def create_from_string(s, allow_condition = False):
 
     condition = []
+    import types
+    if not isinstance(s, types.StringType):
+        print type(s)
     if __re_has_condition.search(s):
 
         if not allow_condition:
@@ -160,7 +163,7 @@ def refine (properties, requirements):
     # Record them so that we can handle 'properties'.
     for r in requirements:
         # Don't consider conditional requirements.
-        if r.condition():
+        if not r.condition():
             required[r.feature()] = r
 
     for p in properties:

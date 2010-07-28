@@ -443,6 +443,7 @@ class Tester(TestCmd.TestCmd):
                 if "--python" in sys.argv:
                     kw['program'].append("--python")
                 kw['chdir'] = subdir
+                self.last_program_invocation = kw['program']
                 apply(TestCmd.TestCmd.run, [self], kw)
             except:
                 self.dump_stdio()
@@ -526,7 +527,10 @@ class Tester(TestCmd.TestCmd):
             return ''
 
     def read_and_strip(self, name):
-        lines = open(self.glob_file(name), "rb").readlines()
+        if not self.glob_file(name):
+            return ''
+        f = open(self.glob_file(name), "rb")
+        lines = f.readlines()
         result = string.join(map(string.rstrip, lines), "\n")
         if lines and lines[-1][-1] == '\n':
             return result + '\n'
@@ -555,6 +559,8 @@ class Tester(TestCmd.TestCmd):
             elif os.path.exists(path):
                 raise "Path " + path + " already exists and is not a directory";
             shutil.copytree(self.workdir, path)
+            print "The failed command was:"
+            print ' '.join(self.last_program_invocation)
 
         at = TestCmd.caller(traceback.extract_stack(), 0)
         annotation("stacktrace", at)
@@ -666,6 +672,8 @@ class Tester(TestCmd.TestCmd):
         self.ignore('*/gmon.out')
 
         self.ignore("bin/config.log")
+
+        self.ignore("*.pyc")
 
         if not self.unexpected_difference.empty():
             annotation('failure', 'Unexpected changes found')

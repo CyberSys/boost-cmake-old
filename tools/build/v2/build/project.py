@@ -56,7 +56,7 @@ class ProjectRegistry:
 
     def __init__(self, manager, global_build_dir):
         self.manager = manager
-        self.global_build_dir = None
+        self.global_build_dir = global_build_dir
         self.project_rules_ = ProjectRules(self)
 
         # The target corresponding to the project being loaded now
@@ -280,7 +280,8 @@ Attempted to find it with pattern '%s'.
 Please consult the documentation at 'http://boost.org/boost-build2'."""
                 % (dir, string.join(self.JAMFILE)))
 
-        return jamfile_glob[0]
+        if jamfile_glob:
+            return jamfile_glob[0]
     
     def load_jamfile(self, dir):
         """Load a Jamfile at the given directory. Returns nothing.
@@ -288,10 +289,12 @@ Please consult the documentation at 'http://boost.org/boost-build2'."""
         Effect of calling this rule twice with the same 'dir' is underfined."""
       
         # See if the Jamfile is where it should be.
+        is_jamroot = False
         jamfile_to_load = b2.util.path.glob([dir], self.JAMROOT)
         if not jamfile_to_load:
             jamfile_to_load = self.find_jamfile(dir)
         else:
+            is_jamroot = True
             jamfile_to_load = jamfile_to_load[0]
             
         # The module of the jamfile.
@@ -319,7 +322,12 @@ Please consult the documentation at 'http://boost.org/boost-build2'."""
 
             bjam.call("load", jamfile_module, jamfile_to_load)
             basename = os.path.basename(jamfile_to_load)
-                        
+
+            if is_jamroot:
+                jamfile = self.find_jamfile(dir, no_errors=True)
+                if jamfile:
+                    bjam.call("load", jamfile_module, jamfile)
+                                    
         # Now do some checks
         if self.current_project != saved_project:
             self.manager.errors()(
@@ -331,7 +339,7 @@ expected value %s
 actual value %s""" % (jamfile_module, saved_project, self.current_project))
           
         if self.global_build_dir:
-            id = self.attribute(jamfile_module, "id")
+            id = self.attributeDefault(jamfile_module, "id", None)
             project_root = self.attribute(jamfile_module, "project-root")
             location = self.attribute(jamfile_module, "location")
 
@@ -385,8 +393,6 @@ actual value %s""" % (jamfile_module, saved_project, self.current_project))
         # source paths are correct.
         if not location:
             location = ""
-        else:
-            location = b2.util.path.relpath(os.getcwd(), location)
 
         attributes = ProjectAttributes(self.manager, location, module_name)
         self.module2attributes[module_name] = attributes
@@ -482,8 +488,8 @@ actual value %s""" % (jamfile_module, saved_project, self.current_project))
              parent_dir = os.path.join(os.getcwd(), parent_location)
 
              build_dir = os.path.join(parent_build_dir,
-                                      b2.util.path.relpath(parent_dir,
-                                                                    our_dir))
+                                      os.path.relpath(our_dir, parent_dir))
+             attributes.set("build-dir", build_dir, exact=True)
 
     def register_id(self, id, module):
         """Associate the given id with the given project module."""
@@ -515,8 +521,7 @@ actual value %s""" % (jamfile_module, saved_project, self.current_project))
         try:    
             return self.module2attributes[project].get(attribute)
         except:
-            print "Sucks", project, attribute
-            raise "Sucks"
+            raise BaseException("No attribute '%s' for project" % (attribute, project))
 
     def attributeDefault(self, project, attribute, default):
         """Returns the value of the specified attribute in the
@@ -700,7 +705,7 @@ class ProjectAttributes:
         self.attributes = {}
         self.usage_requirements = None
         
-    def set(self, attribute, specification, exact):
+    def set(self, attribute, specification, exact=False):
         """Set the named attribute from the specification given by the user.
         The value actually set may be different."""
 
@@ -747,7 +752,7 @@ class ProjectAttributes:
             self.__dict__["source-location"] = source_location
                 
         elif attribute == "build-dir":
-            self.__dict__["build-dir"] = os.path.join(self.location, specification)
+            self.__dict__["build-dir"] = os.path.join(self.location, specification[0])
                  
         elif not attribute in ["id", "default-build", "location",
                                "source-location", "parent",
@@ -885,6 +890,8 @@ class ProjectRules:
                 id = '/' + id
             self.registry.register_id (id, jamfile_module)
 
+        attributes.set('id', id)
+
         explicit_build_dir = None
         for a in args:
             if a:
@@ -904,16 +911,17 @@ class ProjectRules:
                 # This is Jamroot.
                 if id:
                     if explicit_build_dir and os.path.isabs(explicit_build_dir):
-                        self.register.manager.errors()(
+                        self.registry.manager.errors()(
 """Absolute directory specified via 'build-dir' project attribute
 Don't know how to combine that with the --build-dir option.""")
 
                     rid = id
                     if rid[0] == '/':
                         rid = rid[1:]
-
-                    p = os.path.join(self.registry.global_build_dir,
-                                     rid, explicit_build_dir)
+                    
+                    p = os.path.join(self.registry.global_build_dir, rid)
+                    if explicit_build_dir:
+                        p = os.path.join(p, explicit_build_dir)
                     attributes.set("build-dir", p, exact=1)
             elif explicit_build_dir:
                 self.registry.manager.errors()(
