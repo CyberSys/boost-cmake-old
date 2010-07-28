@@ -670,6 +670,8 @@ class Tester(TestCmd.TestCmd):
 
         self.ignore("bin/config.log")
 
+        self.ignore("*.pyc")
+
         if not self.unexpected_difference.empty():
             annotation('failure', 'Unexpected changes found')
             output = StringIO.StringIO()
