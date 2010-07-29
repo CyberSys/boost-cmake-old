@@ -211,9 +211,11 @@ class ProjectRegistry:
             # must be placed in the directory referred by id.
         
             project_module = self.module_name(location)
-            if not project_module in self.jamfile_modules and \
-               b2.util.path.glob([location], self.JAMROOT + self.JAMFILE):
-                project_module = self.load(location)
+            if not project_module in self.jamfile_modules:
+                if b2.util.path.glob([location], self.JAMROOT + self.JAMFILE):
+                    project_module = self.load(location)
+                else:
+                    project_module = None
 
         return project_module
 
@@ -635,7 +637,7 @@ actual value %s""" % (jamfile_module, saved_project, self.current_project))
 
         mname = "__build_build_temporary__"
         file = open(location)
-        try:
+        try:            
             # TODO: this means we'll never make use of .pyc module,
             # which might be a problem, or not.
             module = imp.load_module(mname, file, os.path.basename(location),
@@ -811,14 +813,14 @@ class ProjectRules:
         
 
     def add_rule_for_type(self, type):
-        rule_name = type.lower();
+        rule_name = type.lower().replace("_", "-")
 
         def xpto (name, sources, requirements = [], default_build = None, usage_requirements = []):
             return self.manager_.targets().create_typed_target(
                 type, self.registry.current(), name[0], sources,
                 requirements, default_build, usage_requirements) 
 
-        self.add_rule(type.lower(), xpto)
+        self.add_rule(rule_name, xpto)
     
     def add_rule(self, name, callable):
         self.rules[name] = callable
@@ -847,7 +849,7 @@ class ProjectRules:
                 e.report()
         finally:                
             self.manager_.errors().pop_jamfile_context()
-                                        
+
         return result
 
     def make_wrapper(self, callable):
@@ -855,7 +857,7 @@ class ProjectRules:
         callable that will call 'callable' and report all exceptins,
         using 'call_and_report_errors'."""
         def wrapper(*args, **kw):
-            self.call_and_report_errors(callable, *args, **kw)
+            return self.call_and_report_errors(callable, *args, **kw)
         return wrapper
 
     def init_project(self, project_module):
@@ -1001,14 +1003,18 @@ attribute is allowed only for top-level 'project' invocations""")
     def import_(self, name, names_to_import=None, local_names=None):
 
         name = name[0]
+        py_name = name
+        if py_name == "os":
+            py_name = "os_j"
         jamfile_module = self.registry.current().project_module()
         attributes = self.registry.attributes(jamfile_module)
         location = attributes.get("location")
 
-        m = self.registry.load_module(name, [location])
+        m = self.registry.load_module(py_name, [location])
 
         for f in m.__dict__:
             v = m.__dict__[f]
+            f = f.replace("_", "-")
             if callable(v):
                 self._import_rule(jamfile_module, name + "." + f, v)
                 self.reverse.setdefault(jamfile_module, {})[name + "." + f] = v

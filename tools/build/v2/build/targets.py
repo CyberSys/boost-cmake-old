@@ -738,7 +738,7 @@ class MainTarget (AbstractTarget):
                 "Failed to build '%s'\n"
                 "with properties '%s'\n"
                 "because no best-matching alternative could be found."
-                  % (full_name, prop_set.raw ()))
+                  % (self.full_name(), prop_set))
 
         result = best_alternative.generate (prop_set)
                     
@@ -855,13 +855,13 @@ class BasicTarget (AbstractTarget):
         sproperties = []
         
         if split.group (3):
-            sproperties = property.make (feature.split (split.group (3)))
-            sproperties = self.manager.features ().expand_composites (sproperties)
+            sproperties = property.create_from_strings(feature.split(split.group(3)))
+            sproperties = feature.expand_composites(sproperties)
     
         # Find the target
         target = project.find (id)
         
-        return (target, property_set.create (sproperties))
+        return (target, property_set.create(sproperties))
 
     def common_properties (self, build_request, requirements):
         """ Given build request and requirements, return properties
@@ -1280,6 +1280,22 @@ class TypedTarget (BasicTarget):
                 sys.exit(1)
         
         return r
+
+
+def create_typed_metatarget(name, type, sources, requirements, default_build, usage_requirements):
+    
+    from b2.manager import get_manager
+    t = get_manager().targets()
+    
+    project = get_manager().projects().current()
+        
+    return t.main_target_alternative(
+        TypedTarget(name, project, type,
+                    t.main_target_sources(sources, name),
+                    t.main_target_requirements(requirements, project),
+                    t.main_target_default_build(default_build, project),
+                    t.main_target_usage_requirements(usage_requirements, project)))
+    
 
 def metatarget_function_for_class(class_):
 
