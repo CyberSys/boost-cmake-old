@@ -26,12 +26,15 @@ class Property(object):
 
     __slots__ = ('_feature', '_value', '_condition')
 
-    def __init__(self, feature, value, condition = []):
-        assert(feature.free() or value.find(':') == -1)
-        self._feature = feature
+    def __init__(self, f, value, condition = []):
+        if type(f) == type(""):
+            f = feature.get(f)
+        # At present, single property has a single value.
+        assert type(value) != type([])
+        assert(f.free() or value.find(':') == -1)
+        self._feature = f
         self._value = value
         self._condition = condition
-
         
     def feature(self):
         return self._feature
@@ -60,7 +63,7 @@ class Property(object):
                    (other._feature, other._value, other._condition))
                            
 
-def create_from_string(s, allow_condition = False):
+def create_from_string(s, allow_condition=False):
 
     condition = []
     import types
@@ -98,9 +101,9 @@ def create_from_string(s, allow_condition = False):
                    
     return Property(f, value, condition)
 
-def create_from_strings(string_list, validate=False):
+def create_from_strings(string_list, allow_condition=False):
 
-    return [create_from_string(s, validate) for s in string_list]
+    return [create_from_string(s, allow_condition) for s in string_list]
 
 def reset ():
     """ Clear the module state. This is mainly for testing purposes.
@@ -405,19 +408,15 @@ def take(attributes, properties):
             result.append(e)
     return result
 
-def translate_dependencies(specification, project_id, location):
+def translate_dependencies(properties, project_id, location):
 
     result = []
-    for p in specification:
-        split = split_conditional(p)
-        condition = ""
-        if split:
-            condition = split[0]
-            p = split[1]
+    for p in properties:
 
-        f = get_grist(p)
-        v = get_value(p)
-        if "dependency" in feature.attributes(f):
+        if not p.feature().dependency():
+            result.append(p)
+        else:
+            v = p.value()
             m = re.match("(.*)//(.*)", v)
             if m:
                 rooted = m.group(1)
@@ -425,14 +424,14 @@ def translate_dependencies(specification, project_id, location):
                     # Either project id or absolute Linux path, do nothing.
                     pass
                 else:
-                    rooted = os.path.join(os.getcwd(), location, rooted[0])
-                result.append(condition + f + rooted + "//" + m.group(2))
-            elif os.path.isabs(m.group(v)):                
-                result.append(condition + p)
+                    rooted = os.path.join(os.getcwd(), location, rooted)
+                    
+                result.append(Property(p.feature(), rooted + "//" + m.group(2), p.condition()))
+                
+            elif os.path.isabs(v):                
+                result.append(p)
             else:
-                result.append(condition + f + project_id + "//" + v)
-        else:
-            result.append(condition + p)
+                result.append(Property(p.feature(), project_id + "//" + v, p.condition()))
 
     return result
 

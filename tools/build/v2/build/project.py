@@ -1,5 +1,5 @@
-# Status: being ported by Vladimir Prus
-# Base revision: 42507
+# Status: ported.
+# Base revision: 64488
 
 # Copyright 2002, 2003 Dave Abrahams 
 # Copyright 2002, 2005, 2006 Rene Rivera 
@@ -51,6 +51,7 @@ import os
 import string
 import imp
 import traceback
+import b2.util.option as option
 
 class ProjectRegistry:
 
@@ -88,6 +89,8 @@ class ProjectRegistry:
         # Map from names to Python modules, for modules loaded
         # via 'using' and 'import' rules in Jamfiles.
         self.loaded_tool_modules_ = {}
+
+        self.loaded_tool_module_path_ = {}
 
         # Map from project target to the list of
         # (id,location) pairs corresponding to all 'use-project'
@@ -133,7 +136,7 @@ class ProjectRegistry:
         # If Jamfile is already loaded, don't try again.
         if not mname in self.jamfile_modules:
         
-            self.load_jamfile(jamfile_location)
+            self.load_jamfile(jamfile_location, mname)
                 
             # We want to make sure that child project are loaded only
             # after parent projects. In particular, because parent projects
@@ -285,7 +288,7 @@ Please consult the documentation at 'http://boost.org/boost-build2'."""
         if jamfile_glob:
             return jamfile_glob[0]
     
-    def load_jamfile(self, dir):
+    def load_jamfile(self, dir, jamfile_module):
         """Load a Jamfile at the given directory. Returns nothing.
         Will attempt to load the file as indicated by the JAMFILE patterns.
         Effect of calling this rule twice with the same 'dir' is underfined."""
@@ -296,13 +299,16 @@ Please consult the documentation at 'http://boost.org/boost-build2'."""
         if not jamfile_to_load:
             jamfile_to_load = self.find_jamfile(dir)
         else:
+            if len(jamfile_to_load) > 1:
+                get_manager().errors()("Multiple Jamfiles found at '%s'\n" +\
+                                       "Filenames are: %s"
+                                       % (dir, [os.path.basename(j) for j in jamfile_to_load]))
+
             is_jamroot = True
             jamfile_to_load = jamfile_to_load[0]
             
         # The module of the jamfile.
-        dir = os.path.realpath(os.path.dirname(jamfile_to_load))
-        
-        jamfile_module = self.module_name (dir)
+        dir = os.path.realpath(os.path.dirname(jamfile_to_load))       
 
         # Initialize the jamfile module before loading.
         #    
@@ -399,10 +405,17 @@ actual value %s""" % (jamfile_module, saved_project, self.current_project))
         attributes = ProjectAttributes(self.manager, location, module_name)
         self.module2attributes[module_name] = attributes
 
+        python_standalone = False
         if location:
             attributes.set("source-location", [location], exact=1)
-        else:
-            attributes.set("source-location", "", exact=1)
+        elif not module_name in ["test-config", "site-config", "user-config", "project-config"]:
+            # This is a standalone project with known location. Set source location
+            # so that it can declare targets. This is intended so that you can put
+            # a .jam file in your sources and use it via 'using'. Standard modules
+            # (in 'tools' subdir) may not assume source dir is set.
+            module = sys.modules[module_name]          
+            attributes.set("source-location", self.loaded_tool_module_path_[module_name], exact=1)
+            python_standalone = True
 
         attributes.set("requirements", property_set.empty(), exact=True)
         attributes.set("usage-requirements", property_set.empty(), exact=True)
@@ -411,16 +424,20 @@ actual value %s""" % (jamfile_module, saved_project, self.current_project))
         attributes.set("project-root", None, exact=True)
         attributes.set("build-dir", None, exact=True)
         
-        self.project_rules_.init_project(module_name)
+        self.project_rules_.init_project(module_name, python_standalone)
 
         jamroot = False
 
         parent_module = None;
-        if module_name == "site-config":
+        if module_name == "test-config":
             # No parent
             pass
+        elif module_name == "site-config":
+            parent_module = "test-config"
         elif module_name == "user-config":
             parent_module = "site-config"
+        elif module_name == "project-config":
+            parent_module = "user-config"
         elif location and not self.is_jamroot(basename):
             # We search for parent/project-root only if jamfile was specified 
             # --- i.e
@@ -430,7 +447,12 @@ actual value %s""" % (jamfile_module, saved_project, self.current_project))
             # It's either jamroot, or standalone project.
             # If it's jamroot, inherit from user-config.
             if location:
-                parent_module = "user-config" ;                
+                # If project-config module exist, inherit from it.
+                if self.module2attributes.has_key("project-config"):
+                    parent_module = "project-config"
+                else:
+                    parent_module = "user-config" ;
+                
                 jamroot = True ;
                 
         if parent_module:
@@ -501,6 +523,9 @@ actual value %s""" % (jamfile_module, saved_project, self.current_project))
         """Returns the project which is currently being loaded."""
         return self.current_project
 
+    def set_current(self, c):
+        self.current_project = c
+
     def push_current(self, project):
         """Temporary changes the current project to 'project'. Should
         be followed by 'pop-current'."""
@@ -550,7 +575,7 @@ actual value %s""" % (jamfile_module, saved_project, self.current_project))
             # that id is not equal to the 'id' parameter.
             if self.id2module.has_key(id) and self.id2module[id] != project_module:
                 self.manager.errors()(
-"""Attempt to redeclare already existing project id '%s'""" % id)
+"""Attempt to redeclare already existing project id '%s' at location '%s'""" % (id, location))
             self.id2module[id] = project_module
 
         self.current_module = saved_project
@@ -565,12 +590,12 @@ actual value %s""" % (jamfile_module, saved_project, self.current_project))
         return self.project_rules_
 
     def glob_internal(self, project, wildcards, excludes, rule_name):
-        location = project.get("source-location")
+        location = project.get("source-location")[0]
 
         result = []
         callable = b2.util.path.__dict__[rule_name]
         
-        paths = callable(location, wildcards, excludes)
+        paths = callable([location], wildcards, excludes)
         has_dir = 0
         for w in wildcards:
             if os.path.dirname(w):
@@ -578,11 +603,21 @@ actual value %s""" % (jamfile_module, saved_project, self.current_project))
                 break
 
         if has_dir or rule_name != "glob":
+            result = []
             # The paths we've found are relative to current directory,
             # but the names specified in sources list are assumed to
             # be relative to source directory of the corresponding
-            # prject. So, just make the name absolute.
-            result = [os.path.join(os.getcwd(), p) for p in paths]
+            # prject. Either translate them or make absolute.
+
+            for p in paths:
+                rel = os.path.relpath(p, location)
+                # If the path is below source location, use relative path.
+                if not ".." in rel:
+                    result.append(rel)
+                else:
+                    # Otherwise, use full path just to avoid any ambiguities.
+                    result.append(os.path.abspath(p))
+                    
         else:
             # There were not directory in wildcard, so the files are all
             # in the source directory of the project. Just drop the
@@ -635,14 +670,14 @@ actual value %s""" % (jamfile_module, saved_project, self.current_project))
         if not location:
             self.manager.errors()("Cannot find module '%s'" % name)
 
-        mname = "__build_build_temporary__"
+        mname = name + "__for_jamfile"
         file = open(location)
         try:            
             # TODO: this means we'll never make use of .pyc module,
             # which might be a problem, or not.
+            self.loaded_tool_module_path_[mname] = location
             module = imp.load_module(mname, file, os.path.basename(location),
                                      (".py", "r", imp.PY_SOURCE))
-            del sys.modules[mname]
             self.loaded_tool_modules_[name] = module
             return module
         finally:
@@ -730,15 +765,16 @@ class ProjectAttributes:
 
             non_free = property.remove("free", unconditional)
             if non_free:                
-                pass
-                # FIXME:
-                #errors.error "usage-requirements" $(specification) "have non-free properties" $(non-free) ;
+                get_manager().errors()("usage-requirements %s have non-free properties %s" \
+                                       % (specification, non_free))
 
-            t = property.translate_paths(property.create_from_strings(specification), self.location)
+            t = property.translate_paths(
+                    property.create_from_strings(specification, allow_condition=True),
+                    self.location)
 
             existing = self.__dict__.get("usage-requirements")
             if existing:
-                new = property_set.create(existing.raw() +  t)
+                new = property_set.create(existing.all() +  t)
             else:
                 new = property_set.create(t)
             self.__dict__["usage-requirements"] = new
@@ -750,13 +786,20 @@ class ProjectAttributes:
         elif attribute == "source-location":
             source_location = []
             for path in specification:
-                source_location += os.path.join(self.location, path)
+                source_location.append(os.path.join(self.location, path))
             self.__dict__["source-location"] = source_location
                 
         elif attribute == "build-dir":
             self.__dict__["build-dir"] = os.path.join(self.location, specification[0])
-                 
-        elif not attribute in ["id", "default-build", "location",
+
+        elif attribute == "id":
+            id = specification[0]
+            if id[0] != '/':
+                id = "/" + id
+            self.manager.projects().register_id(id, self.project_module)
+            self.__dict__["id"] = id
+                
+        elif not attribute in ["default-build", "location",
                                "source-location", "parent",
                                "projects-to-build", "project-root"]:
             self.manager.errors()(
@@ -860,8 +903,20 @@ class ProjectRules:
             return self.call_and_report_errors(callable, *args, **kw)
         return wrapper
 
-    def init_project(self, project_module):
+    def init_project(self, project_module, python_standalone=False):
 
+        if python_standalone:
+            m = sys.modules[project_module]
+
+            for n in self.local_names:
+                if n != "import_":
+                    setattr(m, n, getattr(self, n))
+                            
+            for n in self.rules:
+                setattr(m, n, self.rules[n])
+
+            return
+                        
         for n in self.local_names:            
             # Using 'getattr' here gives us a bound method,
             # while using self.__dict__[r] would give unbound one.
@@ -888,11 +943,7 @@ class ProjectRules:
             args = args[1:]
 
         if id:
-            if id[0] != '/':
-                id = '/' + id
-            self.registry.register_id (id, jamfile_module)
-
-        attributes.set('id', id)
+            attributes.set('id', [id])
 
         explicit_build_dir = None
         for a in args:
@@ -910,6 +961,10 @@ class ProjectRules:
             # If we try to set build dir for user-config, we'll then
             # try to inherit it, with either weird, or wrong consequences.
             if location and location == attributes.get("project-root"):
+                # Re-read the project id, since it might have been changed in
+                # the project's attributes.
+                id = attributes.get('id')
+
                 # This is Jamroot.
                 if id:
                     if explicit_build_dir and os.path.isabs(explicit_build_dir):
@@ -962,6 +1017,11 @@ attribute is allowed only for top-level 'project' invocations""")
         for n in target_names:
             t.mark_target_as_explicit(n)
 
+    def always(self, target_names):
+        p = self.registry.current()
+        for n in target_names:
+            p.mark_target_as_always(n)
+
     def glob(self, wildcards, excludes=None):
         return self.registry.glob_internal(self.registry.current(),
                                            wildcards, excludes, "glob")
@@ -978,7 +1038,7 @@ attribute is allowed only for top-level 'project' invocations""")
                     bad = 1
 
         if bad:
-            self.registry.manager().errors()(
+            self.registry.manager.errors()(
 "The patterns to 'glob-tree' may not include directory")
         return self.registry.glob_internal(self.registry.current(),
                                            wildcards, excludes, "glob_tree")
@@ -1010,6 +1070,8 @@ attribute is allowed only for top-level 'project' invocations""")
         attributes = self.registry.attributes(jamfile_module)
         location = attributes.get("location")
 
+        saved = self.registry.current()
+
         m = self.registry.load_module(py_name, [location])
 
         for f in m.__dict__:
@@ -1029,6 +1091,8 @@ attribute is allowed only for top-level 'project' invocations""")
 
             for n, l in zip(names_to_import, local_names):
                 self._import_rule(jamfile_module, l, m.__dict__[n])
+                
+        self.registry.set_current(saved)
         
     def conditional(self, condition, requirements):
         """Calculates conditional requirements for multiple requirements
@@ -1052,3 +1116,10 @@ attribute is allowed only for top-level 'project' invocations""")
             return self.reverse[jamfile_module].get(name_in_jamfile_modue, None)
 
         return None
+
+    def option(self, name, value):
+        name = name[0]
+        if not name in ["site-config", "user-config", "project-config"]:
+            get_manager().errors()("The 'option' rule may be used only in site-config or user-config")
+
+        option.set(name, value[0])

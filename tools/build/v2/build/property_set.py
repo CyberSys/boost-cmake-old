@@ -13,6 +13,8 @@ from b2.exceptions import *
 from b2.util.sequence import unique
 from b2.util.set import difference
 
+from b2.manager import get_manager
+
 def reset ():
     """ Clear the module state. This is mainly for testing purposes.
     """
@@ -68,6 +70,11 @@ def create_from_user_input(raw_properties, jamfile_module, location):
     properties = property.create_from_strings(raw_properties, True)
     properties = property.translate_paths(properties, location)
     properties = property.translate_indirect(properties, jamfile_module)
+
+    project_id = get_manager().projects().attributeDefault(jamfile_module, 'id', None)
+    if not project_id:
+        project_id = os.path.abspath(location)    
+    properties = property.translate_dependencies(properties, project_id, location)
     properties = property.expand_subfeatures_in_conditions(properties)
     return create(properties)
 
@@ -147,7 +154,6 @@ class PropertySet:
         self.incidental_ = []
         self.free_ = []
         self.base_ = []
-        self.base_raw_ = []
         self.dependency_ = []
         self.non_dependency_ = []
         self.conditional_ = []
@@ -192,18 +198,7 @@ class PropertySet:
                 raise BaseException ("Invalid property: '%s'" % p)
             
             att = feature.attributes (get_grist (p))
-            
-            # A feature can be both incidental and free,
-            # in which case we add it to incidental.
-            if 'incidental' in att:
-                pass
-#                self.incidental_.append (p)
-            elif 'free' in att:
- #               self.free_.append (p)
-                pass
-            else:
-                self.base_raw_.append (p)
-                                                       
+                                                                   
             if 'propagated' in att:
                 self.propagated_.append (p)
 
@@ -212,6 +207,8 @@ class PropertySet:
 
         for p in properties:
 
+            # A feature can be both incidental and free,
+            # in which case we add it to incidental.
             if p.feature().incidental():
                 self.incidental_.append(p)
             elif p.feature().free():
@@ -244,7 +241,7 @@ class PropertySet:
     def base (self):
         """ Returns properties that are neither incidental nor free.
         """
-        return self.base_raw_
+        return self.base_
     
     def free (self):
         """ Returns free properties which are not dependency properties.
@@ -366,7 +363,7 @@ class PropertySet:
             # change the location of generated targets
             l = self.get ('<location>')
             if l:
-                computed = l
+                computed = l[0]
                 is_relative = False
 
             else:
@@ -394,7 +391,7 @@ class PropertySet:
                 is_relative = True
 
             self.target_path_ = (computed, is_relative)
-            
+
         return self.target_path_
                     
     def add (self, ps):
@@ -428,6 +425,19 @@ class PropertySet:
         
         return self.feature_map_.get(feature, [])
 
+    # FIXME: make this cached
+    def get_properties(self, feature):
+        """Returns all contained properties associated with 'feature'"""
+
+        if not isinstance(feature, b2.build.feature.Feature):
+            feature = b2.build.feature.get(feature)
+
+        result = []        
+        for p in self.all_:
+            if p.feature() == feature:
+                result.append(p)
+        return result
+    
     def __contains__(self, item):
         for p in self.all_set_:
             if p.feature().name() == "toolset":

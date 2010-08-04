@@ -22,6 +22,9 @@ import os.path
 from utility import to_seq
 from glob import glob as builtin_glob
 
+from b2.util import bjam_signature
+
+@bjam_signature((["path", "root"],))
 def root (path, root):
     """ If 'path' is relative, it is rooted at 'root'. Otherwise, it's unchanged.
     """
@@ -30,6 +33,7 @@ def root (path, root):
     else:
         return os.path.join (root, path)
 
+@bjam_signature((["native"],))
 def make (native):
     """ Converts the native path into normalized form.
     """
@@ -43,6 +47,7 @@ def make_UNIX (native):
 
     return os.path.normpath (native)
 
+@bjam_signature((["path"],))
 def native (path):
     """ Builds a native representation of the path.
     """
@@ -843,7 +848,7 @@ def glob_tree(roots, patterns, exclude_patterns=None):
         exclude_patterns = []
 
     result = glob(roots, patterns, exclude_patterns)
-    subdirs = [s for s in result if s != "." and s != ".." and os.path.isdir(s)]
+    subdirs = [s for s in glob(roots, ["*"]) if s != "." and s != ".." and os.path.isdir(s)]
     if subdirs:
         result.extend(glob_tree(subdirs, patterns, exclude_patterns))
         
