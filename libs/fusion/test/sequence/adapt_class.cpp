@@ -1,11 +1,11 @@
 /*=============================================================================
-    Copyright (c) 2001-2007 Joel de Guzman
+    Copyright (c) 2001-2009 Joel de Guzman
 
     Distributed under the Boost Software License, Version 1.0. (See accompanying
     file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 ==============================================================================*/
 #include <boost/detail/lightweight_test.hpp>
-#include <boost/fusion/adapted/struct/adapt_struct.hpp>
+#include <boost/fusion/adapted/class/adapt_class.hpp>
 #include <boost/fusion/sequence/intrinsic/at.hpp>
 #include <boost/fusion/sequence/intrinsic/size.hpp>
 #include <boost/fusion/sequence/intrinsic/empty.hpp>
@@ -28,50 +28,63 @@
 #include <boost/mpl/front.hpp>
 #include <boost/mpl/is_sequence.hpp>
 #include <boost/mpl/assert.hpp>
-#include <boost/static_assert.hpp>
 #include <iostream>
 #include <string>
 
 namespace ns
 {
-    struct point
+    class point
     {
+    public:
+    
+        point() : x(0), y(0) {}
+        point(int in_x, int in_y) : x(in_x), y(in_y) {}
+            
+        int get_x() const { return x; }
+        int get_y() const { return y; }
+        void set_x(int x_) { x = x_; }
+        void set_y(int y_) { y = y_; }
+        
+    private:
+        
         int x;
         int y;
     };
 
 #if !BOOST_WORKAROUND(__GNUC__,<4)
-    struct point_with_private_attributes
+    class point_with_private_members
     {
         friend struct boost::fusion::extension::access;
 
+    public:
+        point_with_private_members() : x(0), y(0) {}
+        point_with_private_members(int x, int y) : x(x), y(y) {}
+
     private:
+        int get_x() const { return x; }
+        int get_y() const { return y; }
+        void set_x(int x_) { x = x_; }
+        void set_y(int y_) { y = y_; }
+
         int x;
         int y;
-
-    public:
-        point_with_private_attributes(int x, int y):x(x),y(y)
-        {}
     };
 #endif
 }
 
-BOOST_FUSION_ADAPT_STRUCT(
+BOOST_FUSION_ADAPT_CLASS(
     ns::point,
-    (int, x)
-    (int, y)
+    (int, int, obj.get_x(), obj.set_x(val))
+    (int, int, obj.get_y(), obj.set_y(val))
 )
 
 #if !BOOST_WORKAROUND(__GNUC__,<4)
-BOOST_FUSION_ADAPT_STRUCT(
-    ns::point_with_private_attributes,
-    (int, x)
-    (int, y)
+BOOST_FUSION_ADAPT_CLASS(
+    ns::point_with_private_members,
+    (int, int, obj.get_x(), obj.set_x(val))
+    (int, int, obj.get_y(), obj.set_y(val))
 )
 #endif
-
-struct s { int m; };
-BOOST_FUSION_ADAPT_STRUCT(s, (int, m))
 
 int
 main()
@@ -86,7 +99,7 @@ main()
 
     {
         BOOST_MPL_ASSERT_NOT((traits::is_view<ns::point>));
-        ns::point p = {123, 456};
+        ns::point p(123, 456);
 
         std::cout << at_c<0>(p) << std::endl;
         std::cout << at_c<1>(p) << std::endl;
@@ -106,7 +119,7 @@ main()
 
     {
         fusion::vector<int, float> v1(4, 2);
-        ns::point v2 = {5, 3};
+        ns::point v2(5, 3);
         fusion::vector<long, double> v3(5, 4);
         BOOST_TEST(v1 < v2);
         BOOST_TEST(v1 <= v2);
@@ -120,26 +133,16 @@ main()
 
     {
         // conversion from ns::point to vector
-        ns::point p = {5, 3};
+        ns::point p(5, 3);
         fusion::vector<int, long> v(p);
         v = p;
     }
 
     {
         // conversion from ns::point to list
-        ns::point p = {5, 3};
+        ns::point p(5, 3);
         fusion::list<int, long> l(p);
         l = p;
-    }
-
-    { // begin/end
-        using namespace boost::fusion;
-        using boost::is_same;
-
-        typedef result_of::begin<s>::type b;
-        typedef result_of::end<s>::type e;
-        // this fails
-        BOOST_MPL_ASSERT((is_same<result_of::next<b>::type, e>));
     }
 
     {
@@ -151,12 +154,23 @@ main()
 
 #if !BOOST_WORKAROUND(__GNUC__,<4)
     {
-        ns::point_with_private_attributes p(123, 456);
+        BOOST_MPL_ASSERT_NOT((traits::is_view<ns::point_with_private_members>));
+        ns::point_with_private_members p(123, 456);
 
         std::cout << at_c<0>(p) << std::endl;
         std::cout << at_c<1>(p) << std::endl;
         std::cout << p << std::endl;
         BOOST_TEST(p == make_vector(123, 456));
+
+        at_c<0>(p) = 6;
+        at_c<1>(p) = 9;
+        BOOST_TEST(p == make_vector(6, 9));
+
+        BOOST_STATIC_ASSERT(result_of::size<ns::point_with_private_members>::value == 2);
+        BOOST_STATIC_ASSERT(!result_of::empty<ns::point_with_private_members>::value);
+
+        BOOST_TEST(front(p) == 6);
+        BOOST_TEST(back(p) == 9);
     }
 #endif
 
