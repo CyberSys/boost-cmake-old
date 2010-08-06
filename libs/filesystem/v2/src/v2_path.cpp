@@ -15,7 +15,7 @@
 
 #include <boost/filesystem/v2/config.hpp>
 
-#ifndef BOOST_FILESYSTEM_NARROW_ONLY
+#ifndef BOOST_FILESYSTEM2_NARROW_ONLY
 
 #include <boost/filesystem/v2/path.hpp>
 #include <boost/scoped_array.hpp>
@@ -170,4 +170,4 @@ namespace boost
   } // namespace filesystem2
 } // namespace boost
 
-#endif // ifndef BOOST_FILESYSTEM_NARROW_ONLY
+#endif // ifndef BOOST_FILESYSTEM2_NARROW_ONLY
