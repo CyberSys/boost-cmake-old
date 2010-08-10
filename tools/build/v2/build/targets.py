@@ -131,7 +131,7 @@ class TargetRegistry:
 
                 # Inline targets are not built by default.
                 p = t.project()
-                p.mark_target_as_explicit(name)                    
+                p.mark_targets_as_explicit([name])                    
                 result.append(name)
 
             else:
@@ -197,11 +197,10 @@ class TargetRegistry:
         """
         if self.targets_being_built_.has_key(id(main_target_instance)):
             names = []
-            for t in self.targets_being_built_.values():
+            for t in self.targets_being_built_.values() + [main_target_instance]:
                 names.append (t.full_name())
             
-            raise Recursion ("Recursion in main target references" 
-                "the following target are being built currently: '%s'" % names)
+            get_manager().errors()("Recursion in main target references\n")
         
         self.targets_being_built_[id(main_target_instance)] = main_target_instance
 
@@ -442,16 +441,16 @@ class ProjectTarget (AbstractTarget):
                         
         return result
 
-    def mark_target_as_explicit (self, target_name):
+    def mark_targets_as_explicit (self, target_names):
         """Add 'target' to the list of targets in this project
         that should be build only by explicit request."""
         
         # Record the name of the target, not instance, since this
         # rule is called before main target instaces are created.
-        self.explicit_targets_.add(target_name)
+        self.explicit_targets_.update(target_names)
 
-    def mark_target_as_always(self, target_name):
-        self.always_targets_.add(target_name)
+    def mark_targets_as_always(self, target_names):
+        self.always_targets_.update(target_names)
     
     def add_alternative (self, target_instance):
         """ Add new target alternative.
@@ -667,7 +666,7 @@ class MainTarget (AbstractTarget):
         for v in self.alternatives_:
             properties = v.match (property_set, debug)
                        
-            if properties:
+            if properties is not None:
                 if not best:
                     best = v
                     best_properties = properties
@@ -725,12 +724,11 @@ class MainTarget (AbstractTarget):
         best_alternative = self.__select_alternatives (prop_set, debug=0)
 
         if not best_alternative:
-            self.__select_alternatives(prop_set, debug=1)
-            raise NoBestMatchingAlternative (
-                "Failed to build '%s'\n"
-                "with properties '%s'\n"
-                "because no best-matching alternative could be found."
-                  % (self.full_name(), prop_set))
+            # FIXME: revive.
+            # self.__select_alternatives(prop_set, debug=1)
+            self.manager_.errors()(
+                "No best alternative for '%s'.\n"
+                  % (self.full_name(),))
 
         result = best_alternative.generate (prop_set)
                     
@@ -833,7 +831,7 @@ class BasicTarget (AbstractTarget):
     
         for s in sources:
             if get_grist (s):
-                raise InvalidSource ("property '%s' found in the 'sources' parameter for '%s'" (s, name))
+                raise InvalidSource ("property '%s' found in the 'sources' parameter for '%s'" % (s, name))
     
         self.sources_ = sources
         
@@ -871,7 +869,7 @@ class BasicTarget (AbstractTarget):
         if self.source_targets_ == None:
             self.source_targets_ = []
             for s in self.sources_:
-                self.source_targets_.append(self.resolve_reference(s, self.project_)[0])
+                self.source_targets_.append(resolve_reference(s, self.project_)[0])
 
         return self.source_targets_
 

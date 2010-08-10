@@ -53,6 +53,8 @@ import imp
 import traceback
 import b2.util.option as option
 
+from b2.util import record_jam_to_value_mapping, qualify_jam_action
+
 class ProjectRegistry:
 
     def __init__(self, manager, global_build_dir):
@@ -306,10 +308,10 @@ Please consult the documentation at 'http://boost.org/boost-build2'."""
 
             is_jamroot = True
             jamfile_to_load = jamfile_to_load[0]
-            
-        # The module of the jamfile.
-        dir = os.path.realpath(os.path.dirname(jamfile_to_load))       
 
+        dir = os.path.dirname(jamfile_to_load)
+        if not dir:
+            dir = "."
         # Initialize the jamfile module before loading.
         #    
         self.initialize(jamfile_module, dir, os.path.basename(jamfile_to_load))
@@ -847,7 +849,6 @@ class ProjectRules:
                             if x not in ["__init__", "init_project", "add_rule",
                                          "error_reporting_wrapper", "add_rule_for_type", "reverse"]]
         self.all_names_ = [x for x in self.local_names]
-        self.reverse = {}
 
     def _import_rule(self, bjam_module, name, callable):
         if hasattr(callable, "bjam_signature"):
@@ -859,7 +860,7 @@ class ProjectRules:
     def add_rule_for_type(self, type):
         rule_name = type.lower().replace("_", "-")
 
-        def xpto (name, sources, requirements = [], default_build = None, usage_requirements = []):
+        def xpto (name, sources = [], requirements = [], default_build = None, usage_requirements = []):
             return self.manager_.targets().create_typed_target(
                 type, self.registry.current(), name[0], sources,
                 requirements, default_build, usage_requirements) 
@@ -991,13 +992,15 @@ attribute is allowed only for top-level 'project' invocations""")
         Project global constants are normal variables but should
         not be changed. They are applied to every child Jamfile."""
         m = "Jamfile</home/ghost/Work/Boost/boost-svn/tools/build/v2_python/python/tests/bjam/make>"
-        self.registry.current().add_constant(name[0], value[0])
+        self.registry.current().add_constant(name[0], value)
 
     def path_constant(self, name, value):
         """Declare and set a project global constant, whose value is a path. The
         path is adjusted to be relative to the invocation directory. The given
         value path is taken to be either absolute, or relative to this project
         root."""
+        if len(value) > 1:
+            self.registry.manager.error()("path constant should have one element")
         self.registry.current().add_constant(name[0], value[0], path=1)
 
     def use_project(self, id, where):
@@ -1014,14 +1017,10 @@ attribute is allowed only for top-level 'project' invocations""")
         attributes.set("projects-to-build", now + dir, exact=True)
 
     def explicit(self, target_names):
-        t = self.registry.current()
-        for n in target_names:
-            t.mark_target_as_explicit(n)
+        self.registry.current().mark_targets_as_explicit(target_names)
 
     def always(self, target_names):
-        p = self.registry.current()
-        for n in target_names:
-            p.mark_target_as_always(n)
+        self.registry.current().mark_targets_as_alays(target_names)
 
     def glob(self, wildcards, excludes=None):
         return self.registry.glob_internal(self.registry.current(),
@@ -1051,15 +1050,18 @@ attribute is allowed only for top-level 'project' invocations""")
         # will expect the module to be found even though
         # the directory is not in BOOST_BUILD_PATH.
         # So temporary change the search path.
-        jamfile_module = self.registry.current().project_module()
-        attributes = self.registry.attributes(jamfile_module)
-        location = attributes.get("location")
+        current = self.registry.current()
+        location = current.get('location')
 
         m = self.registry.load_module(toolset[0], [location])
         if not m.__dict__.has_key("init"):
             self.registry.manager.errors()(
                 "Tool module '%s' does not define the 'init' method" % toolset[0])
         m.init(*args)
+
+        # The above might have clobbered .current-project. Restore the correct
+        # value.
+        self.registry.set_current(current)
 
     def import_(self, name, names_to_import=None, local_names=None):
 
@@ -1079,8 +1081,10 @@ attribute is allowed only for top-level 'project' invocations""")
             v = m.__dict__[f]
             f = f.replace("_", "-")
             if callable(v):
-                self._import_rule(jamfile_module, name + "." + f, v)
-                self.reverse.setdefault(jamfile_module, {})[name + "." + f] = v
+                qn = name + "." + f
+                self._import_rule(jamfile_module, qn, v)
+                record_jam_to_value_mapping(qualify_jam_action(qn, jamfile_module), v)
+
 
         if names_to_import:
             if not local_names:
@@ -1109,14 +1113,6 @@ attribute is allowed only for top-level 'project' invocations""")
             return [c + r for r in requirements]
         else:
             return [c + ":" + r for r in requirements]
-
-    def reverse_lookup(self, jamfile_module, name_in_jamfile_modue):
-        """Return callable that we've previously imported to jam."""
-
-        if self.reverse.has_key(jamfile_module):
-            return self.reverse[jamfile_module].get(name_in_jamfile_modue, None)
-
-        return None
 
     def option(self, name, value):
         name = name[0]
