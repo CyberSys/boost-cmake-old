@@ -450,7 +450,7 @@ namespace boost
 #else
         template<class charT, class traits>
         std::basic_ostream<charT, traits>& 
-        print(std::basic_ostream<charT, traits>& os)
+        print(std::basic_ostream<charT, traits>& os) const
         {
             if(thread_data)
             {
